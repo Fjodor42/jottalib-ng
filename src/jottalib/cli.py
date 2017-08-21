@@ -359,7 +359,7 @@ def download(argv=None):
 
             _abs_folder_path = posixpath.join(JFS.JFS_ROOT, folder[1:])
             logging.debug("absolute folder path  : %r", _abs_folder_path)
-            _rel_folder_path = _abs_folder_path[len(topdir)+1:]
+            _rel_folder_path = posixpath.join(*posixpath.join(folder.split("/")[4:]))
             logging.info('relative folder path: %r', _rel_folder_path)
 
             if len(_rel_folder_path) > 250: #Windows has a limit of 250 characters in path

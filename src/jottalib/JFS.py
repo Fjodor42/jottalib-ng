@@ -1082,19 +1082,30 @@ class JFS(object):
         headers = self.session.headers.copy()
         headers.update(**extra_headers)
 
-        if not files is None:
-            m = requests_toolbelt.MultipartEncoder(fields=files)
-            if upload_callback is not None:
-                m_len = m.len # compute value for callback closure
-                def callback(monitor):
-                    upload_callback(monitor, m_len)
+	monitor = content # *Should* be None if files isn't
 
-                m = requests_toolbelt.MultipartEncoderMonitor(m, callback)
-            headers['content-type'] = m.content_type
-        else:
-            m = content
+        if not files is None:
+            # In this case, we ensure that the content parameter is disregarded as per previous comment
+            monitor = None
+            log.debug('files: ' + str(files))
+            encoder = requests_toolbelt.MultipartEncoder(files)
+            if upload_callback is not None:
+                encoder_len = encoder.len # compute value for callback closure
+                def callback(m):
+                    upload_callback(m, encoder_len)
+
+                monitor = requests_toolbelt.MultipartEncoderMonitor(encoder, callback)
+            if monitor is None: #If this is true, we don't have callback, but we *do* have an encoder, and re-use the monitor variable
+                monitor = encoder
+            headers['content-type'] = monitor.content_type
+
         url = self.escapeUrl(url)
-        r = self.session.post(url, data=m, params=params, headers=headers)
+
+        # The monitor variable is now either a monitor, an encoder or the content string
+        r = self.session.post(url, data=monitor, params=params, headers=headers)
+
+        log.debug('RESPONSE: ' + str(r))
+
         if not r.ok:
             log.warning('HTTP POST failed: %s', r.text)
             raise JFSError(r.reason)
@@ -1157,10 +1168,11 @@ class JFS(object):
                 log.exception('Problems getting mtime from fileobjet: %r', e)
             timestamp = datetime.datetime.now().isoformat()
         params = {'cphash': md5hash}
-        m = requests_toolbelt.MultipartEncoder({
-             'md5': ('', md5hash),
-             'modified': ('', timestamp),
-             'created': ('', timestamp),
+
+        encoder = requests_toolbelt.MultipartEncoder({
+             'md5': md5hash,
+             'modified': timestamp,
+             'created': timestamp,
              'file': (os.path.basename(url), fileobject, 'application/octet-stream'),
         })
         headers = {'JMd5':md5hash,
@@ -1170,13 +1182,15 @@ class JFS(object):
                    'JSize': str(contentlen), # headers have to be strings or bytes , cf #122
                    'jx_csid': '',
                    'jx_lisence': '',
-                   'content-type': m.content_type,
+                   'content-type': encoder.content_type,
                    }
         fileobject.seek(0) # rewind read index for requests.post
-        files = {'md5': ('', md5hash),
-                 'modified': ('', timestamp),
-                 'created': ('', timestamp),
+
+        files = {'md5': md5hash,
+                 'modified': timestamp,
+                 'created': timestamp,
                  'file': (os.path.basename(url), fileobject, 'application/octet-stream')}
+
         return self.post(url, None, files=files, params=params, extra_headers=headers, upload_callback=upload_callback)
 
     def new_device(self, name, type):

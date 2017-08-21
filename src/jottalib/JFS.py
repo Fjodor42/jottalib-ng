@@ -1084,7 +1084,7 @@ class JFS(object):
         headers = self.session.headers.copy()
         headers.update(**extra_headers)
 
-	monitor = content # *Should* be None if files isn't
+        monitor = content # *Should* be None if files isn't
 
         if not files is None:
             # In this case, we ensure that the content parameter is disregarded as per previous comment

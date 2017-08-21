@@ -1067,7 +1067,8 @@ class JFS(object):
             yield _f
 
 
-    def stream(self, url, params=None, chunk_size=64*1024):
+#    def stream(self, url, params=None, chunk_size=64*1024):
+    def stream(self, url, params=None, chunk_size=1024*1024):
         'Iterator to get remote content by chunk_size (bytes)'
         r = self.request(url, params=params)
         for chunk in r.iter_content(chunk_size):

@@ -78,7 +78,7 @@ def filelist(jottapath, JFS):
         return set() # folder does not exist, so pretend it is an empty folder
     if not isinstance(jf, JFSFolder):
         return False
-    return set([f.name for f in jf.files() if not f.is_deleted()]) # Only return files that aren't deleted
+    return set([_encode_filename_to_filesystem(f.name) for f in jf.files() if not f.is_deleted()]) # Only return files that aren't deleted
 
 def folderlist(jottapath, JFS):
     """Get a set() of folders from a jottapath (a folder)"""
@@ -89,7 +89,7 @@ def folderlist(jottapath, JFS):
         return set() # folder does not exist, so pretend it is an empty folder
     if not isinstance(jf, JFSFolder):
         return False
-    return set([f.name for f in jf.folders() if not f.is_deleted()]) # Only return files that aren't deleted
+    return set([_encode_filename_to_filesystem(f.name) for f in jf.folders() if not f.is_deleted()]) # Only return files that aren't deleted
 
 def compare(localtopdir, jottamountpoint, JFS, followlinks=False, exclude_patterns=None):
     """Make a tree of local files and folders and compare it with what's currently on JottaCloud.
@@ -234,19 +234,22 @@ def replace_if_changed(localfile, jottapath, JFS):
 def deleteDir(jottapath, JFS):
     """Remove folder from JottaCloud because it is no longer present on local disk.
     Returns boolean"""
-    jf = JFS.post('%s?dlDir=true' % jottapath)
+    params = {'dlDir':'true'}
+    jf = JFS.post(jottapath,params)
     return jf.is_deleted()
 
 def delete(jottapath, JFS):
     """Remove file from JottaCloud because it is no longer present on local disk.
     Returns boolean"""
-    jf = JFS.post('%s?dl=true' % jottapath)
+    params = {'dl':'true'}
+    jf = JFS.post(jottapath,params)
     return jf.is_deleted()
 
 def mkdir(jottapath, JFS):
     """Make a new directory (a.k.a. folder) on JottaCloud.
     Returns boolean"""
-    jf = JFS.post('%s?mkDir=true' % jottapath)
+    params = {'mkDir':'true'}
+    jf = JFS.post(jottapath,params)
     return instanceof(jf, JFSFolder)
 
 def iter_tree(jottapath, JFS):

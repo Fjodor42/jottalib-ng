@@ -240,6 +240,11 @@ class TestJFSDevice:
       <modified>2015-09-12-T23:10:51Z</modified>
     </mountPoint>
     <mountPoint>
+      <name xml:space="preserve">Photos</name>
+      <size>18577011381</size>
+      <modified>2015-09-12-T23:10:51Z</modified>
+    </mountPoint>
+    <mountPoint>
       <name xml:space="preserve">Shared</name>
       <size>43777</size>
       <modified>2015-09-03-T21:12:55Z</modified>
@@ -256,7 +261,7 @@ class TestJFSDevice:
         dev = JFS.JFSDevice(o, jfs, parentpath=jfs.rootpath)
         assert isinstance(o, lxml.objectify.ObjectifiedElement)
         # Test that mountpoints are populated correctly"
-        assert sorted(dev.mountPoints.keys()) == ['Archive', 'Shared', 'Sync']
+        assert sorted(dev.mountPoints.keys()) == ['Archive', 'Photos', 'Shared', 'Sync']
         assert all(isinstance(item, JFS.JFSMountPoint) for item in dev.mountPoints.values())
         # test "mountPoint" may be either an actual mountPoint element from JFSDevice.mountPoints{} or its .name. '
         assert all(isinstance(item, JFS.JFSFile) for item in dev.files('Archive'))

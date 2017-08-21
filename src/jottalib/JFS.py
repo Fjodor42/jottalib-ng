@@ -1170,6 +1170,7 @@ class JFS(object):
                 log.exception('Problems getting mtime from fileobjet: %r', e)
             timestamp = datetime.datetime.now().isoformat()
         params = {'cphash': md5hash}
+
         encoder = requests_toolbelt.MultipartEncoder({
              'md5': md5hash,
              'modified': timestamp,
@@ -1186,10 +1187,12 @@ class JFS(object):
                    'content-type': encoder.content_type,
                    }
         fileobject.seek(0) # rewind read index for requests.post
+
         files = {'md5': md5hash,
                  'modified': timestamp,
                  'created': timestamp,
                  'file': (os.path.basename(url), HttpFileWrapper(fileobject, 65536), 'application/octet-stream')}
+
         return self.post(url, None, files=files, params=params, extra_headers=headers, upload_callback=upload_callback)
 
     def new_device(self, name, type):

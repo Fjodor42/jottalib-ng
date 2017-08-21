@@ -34,6 +34,7 @@ import requests
 from requests.utils import quote
 import netrc
 import requests_toolbelt
+from filewrapper import HttpFileWrapper
 import certifi
 
 import lxml, lxml.objectify
@@ -1161,7 +1162,7 @@ class JFS(object):
              'md5': ('', md5hash),
              'modified': ('', timestamp),
              'created': ('', timestamp),
-             'file': (os.path.basename(url), fileobject, 'application/octet-stream'),
+             'file': (os.path.basename(url), HttpFileWrapper(fileobject, 65536), 'application/octet-stream'),
         })
         headers = {'JMd5':md5hash,
                    'JCreated': timestamp,
@@ -1176,7 +1177,7 @@ class JFS(object):
         files = {'md5': ('', md5hash),
                  'modified': ('', timestamp),
                  'created': ('', timestamp),
-                 'file': (os.path.basename(url), fileobject, 'application/octet-stream')}
+                 'file': (os.path.basename(url), HttpFileWrapper(fileobject, 65536), 'application/octet-stream')}
         return self.post(url, None, files=files, params=params, extra_headers=headers, upload_callback=upload_callback)
 
     def new_device(self, name, type):

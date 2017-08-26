@@ -121,7 +121,7 @@ class TestJFS:
         assert all(isinstance(item, JFS.JFSDevice) for item in jfs.devices)
 
     def test_up_and_delete_data(self):
-        p = "/Jotta/Archive/testfile_up_and_delete_data.txt"
+        p = "//Jotta/Archive/testfile_up_and_delete_data.txt"
         t = jfs.up(p, six.BytesIO(TESTFILEDATA))
         assert isinstance(t, JFS.JFSFile)
         d = t.delete()
@@ -129,7 +129,7 @@ class TestJFS:
         assert d.is_deleted()
 
     def test_up_and_delete_text(self):
-        p = "/Jotta/Archive/testfile_up_and_delete_text.txt"
+        p = "//Jotta/Archive/testfile_up_and_delete_text.txt"
         t = jfs.up(p, six.StringIO(TESTFILETEXT))
         assert isinstance(t, JFS.JFSFile)
         d = t.delete()
@@ -137,7 +137,7 @@ class TestJFS:
         assert d.is_deleted()
 
     def test_up_and_read(self):
-        p = "/Jotta/Archive/testfile_up_and_read.txt"
+        p = "//Jotta/Archive/testfile_up_and_read.txt"
         t = jfs.up(p, six.BytesIO(TESTFILEDATA))
         f = jfs.getObject(p)
         assert isinstance(f, JFS.JFSFile)
@@ -146,7 +146,7 @@ class TestJFS:
 
     def test_up_and_readpartial(self):
         import random
-        p = "/Jotta/Archive/testfile_up_and_readpartial.txt"
+        p = "//Jotta/Archive/testfile_up_and_readpartial.txt"
         t = jfs.up(p, six.BytesIO(TESTFILEDATA))
         f = jfs.getObject(p)
         # pick a number less than length of text
@@ -157,7 +157,7 @@ class TestJFS:
         f.delete()
 
     def test_stream(self):
-        p = "/Jotta/Archive/testfile_up_and_stream.txt"
+        p = "//Jotta/Archive/testfile_up_and_stream.txt"
         t = jfs.up(p, six.BytesIO(TESTFILEDATA))
         s = b"".join( [ chunk for chunk in t.stream() ] )
         assert s == TESTFILEDATA
@@ -176,9 +176,9 @@ class TestJFS:
 
     def test_getObject(self):
 
-        assert isinstance(jfs.getObject('/Jotta'), JFS.JFSDevice)
-        assert isinstance(jfs.getObject('/Jotta/Archive'), JFS.JFSMountPoint)
-        assert isinstance(jfs.getObject('/Jotta/Archive/test'), JFS.JFSFolder)
+        assert isinstance(jfs.getObject('//Jotta'), JFS.JFSDevice)
+        assert isinstance(jfs.getObject('//Jotta/Archive'), JFS.JFSMountPoint)
+        assert isinstance(jfs.getObject('//Jotta/Archive/test'), JFS.JFSFolder)
         #TODO: test with a python-requests object
 
     def test_urlencoded_filename(self, tmpdir):
@@ -208,7 +208,7 @@ class TestJFS:
             _f.write(f)
             jfs_f = jfs.up(p, six.BytesIO(_f.read_binary()))
             clean_room_path = '%s%s%s%s' % (JFS.JFS_ROOT, jfs.username, '/Jotta/Archive/', f)
-            assert jfs.session.get(clean_room_path).status_code == 200 # check that strange file name is preserved
+            assert isinstance(jfs.getObject(clean_room_path), JFS.JFSFile) # check that strange file name is preserved
             assert jfs_f.path == clean_room_path
             jfs_f.delete()
 
@@ -286,8 +286,8 @@ class TestJFSMountPoint:
 
 <mountPoint time="2015-09-13-T00:16:31Z" host="dn-097.site-000.jotta.no">
   <name xml:space="preserve">Sync</name>
-  <path xml:space="preserve">/havardgulldahl/Jotta</path>
-  <abspath xml:space="preserve">/havardgulldahl/Jotta</abspath>
+  <path xml:space="preserve">/havardgulldahl//Jotta</path>
+  <abspath xml:space="preserve">/havardgulldahl//Jotta</abspath>
   <size>39851461616</size>
   <modified>2015-07-26-T22:26:54Z</modified>
   <device>Jotta</device>
@@ -473,7 +473,7 @@ class TestJFSFile:
     @pytest.mark.xfail(reason="Pending fix on bug #100")
     def test_on_the_fly_unicode_contents(self):
         data = six.StringIO(u'123abcæøå')
-        p = "/Jotta/Archive/testfile_on_the_fly_unicode_contents.txt"
+        p = "//Jotta/Archive/testfile_on_the_fly_unicode_contents.txt"
         t = jfs.up(p, data)
         assert isinstance(t, JFS.JFSFile)
         t.delete()
@@ -519,7 +519,7 @@ class TestJFSError:
         with pytest.raises(JFS.JFSNotFoundError): # HTTP 404
             jfs.get('/Jotta/Archive/FileNot.found')
         with pytest.raises(JFS.JFSRangeError): # HTTP 416
-            p = "/Jotta/Archive/testfile_up_and_readpartial.txt"
+            p = "//Jotta/Archive/testfile_up_and_readpartial.txt"
             t = jfs.up(p, six.BytesIO(TESTFILEDATA))
             f = jfs.getObject(p)
             f.readpartial(10, 3) # Range start index larger than end index;

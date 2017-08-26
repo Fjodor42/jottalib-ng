@@ -20,7 +20,7 @@
 #
 # Copyright 2016 Håvard Gulldahl <havard@gulldahl.no>
 
-
+export PYTHONPATH=/home/sune/src/fjodor42/jottalib/src
 TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir');
 STAMP=$(date +%s);
 TESTFILE="$TMPDIR/Jotta/Archive/test/jottafuse.clitest.${STAMP}.txt";
@@ -36,7 +36,7 @@ BACK="$PWD";
 cd "/tmp";
 
 function cleanup {
-  mount | grep -q JottaCloudFS && unmount "$FUSEDIR";
+  mount | grep -q JottaCloudFS && fusermount -u "$FUSEDIR";
   cd "$BACK";
   rmdir "$FUSEDIR";
 }
@@ -60,39 +60,39 @@ function info {
 info "Testing jottalib cli tools";
 
 info "T1. Upload";
-PYTHONPATH=src python -c 'from jottalib import cli; cli.upload()' "$LOCALTESTFILE" || err "upload() failed";
+ python -c 'from jottalib import cli; cli.upload()' "$LOCALTESTFILE" || err "upload() failed";
 sleep 1;
 
 info "T2. Download";
 LOCALNAME=$(basename "$LOCALTESTFILE");
-PYTHONPATH=src python -c 'from jottalib import cli; cli.download()' "$LOCALNAME" || err "download() failed";
+ python -c 'from jottalib import cli; cli.download()' "$LOCALNAME" || err "download() failed";
 diff -q "$LOCALTESTFILE" "$LOCALNAME" || err "download()ed file contents is not the same as orignal!";
 sleep 1;
 
 info "T3. Read contents";
-PYTHONPATH=src python -c 'from jottalib import cli; cli.cat()' "$LOCALNAME" || err "cat() failed";
+ python -c 'from jottalib import cli; cli.cat()' "$LOCALNAME" || err "cat() failed";
 sleep 1;
 
 info "T4. Make dir";
-PYTHONPATH=src python -c 'from jottalib import cli; cli.mkdir()' "$JOTTADIR" || err "mkdir() failed";
+ python -c 'from jottalib import cli; cli.mkdir()' "$JOTTADIR" || err "mkdir() failed";
 sleep 1;
 
 info "T5. Listing";
-JDIR=$(dirname "$JOTTADIR");
-PYTHONPATH=src python -c 'from jottalib import cli; cli.ls()' "$JDIR" >/dev/null || err "ls() failed";
+#JDIR=$(dirname "$JOTTADIR");
+python -c 'from jottalib import cli; cli.ls()' "$JOTTADIR"  || err "ls() failed";
 sleep 1;
 
 info "T6. Remove file";
-PYTHONPATH=src python -c 'from jottalib import cli; cli.rm()' "$LOCALNAME" || err "rm() file failed";
+ python -c 'from jottalib import cli; cli.rm()' "$LOCALNAME" || err "rm() file failed";
 sleep 1;
 
 info "T7. Fuse";
 mkdir "$FUSEDIR" || true;
-PYTHONPATH=src python -c 'from jottalib import cli; cli.fuse()' "$FUSEDIR" || err "fuse() file failed";
+ python -c 'from jottalib import cli; cli.fuse()' "$FUSEDIR" || err "fuse() file failed";
 sleep 1;
 
 info "T8. Remove dir";
-PYTHONPATH=src python -c 'from jottalib import cli; cli.rm()' "$JOTTADIR" || err "rm() dir failed";
+ python -c 'from jottalib import cli; cli.rm()' "$JOTTADIR" || err "rm() dir failed";
 sleep 1;
 
 

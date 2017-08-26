@@ -731,7 +731,7 @@ class JFSMountPoint(JFSFolder):
     @property
     def path(self):
         jottadev = self.jfs.get_jfs_device('Jotta')
-	log.debug('**********' + jottadev.path)
+        log.debug('**********' + jottadev.path)
         result = '%s/%s' % (jottadev.path, self.folder.name)
         log.debug('JFSMountPoint, path: %r', result)
         return result

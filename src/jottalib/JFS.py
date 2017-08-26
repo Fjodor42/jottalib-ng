@@ -34,7 +34,6 @@ import requests
 from requests.utils import quote
 import netrc
 import requests_toolbelt
-from requests_toolbelt.filewrapper import HttpFileWrapper
 import certifi
 
 import lxml, lxml.objectify

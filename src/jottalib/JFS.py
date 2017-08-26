@@ -1020,7 +1020,7 @@ class JFS(object):
             if url.startswith('//'):
                 url = url[1:]
             url = self.rootpath + url
-            print url
+            print(url)
 
         log.debug("getting url: %r, extra_headers=%r, params=%r", url, extra_headers, params)
         if extra_headers is None: extra_headers={}
@@ -1127,10 +1127,10 @@ class JFS(object):
             if url.startswith('//'):
                 url = url[1:]
             url = self.rootpath + url
-            print url
+            print(url)
 
         log.debug('posting content (len %s) to url %s', len(content) if content is not None else '?', url)
-        print 'posting content (len %s) to url %s', len(content) if content is not None else '?', url
+        print('posting content (len %s) to url %s', len(content) if content is not None else '?', url)
         headers = self.session.headers.copy()
         headers.update(**extra_headers)
 
@@ -1210,7 +1210,7 @@ class JFS(object):
             log.warning('Could not seek to file offset %r, re-starting upload of %r from 0',
                          resume_offset,
                          url)
-            print 'Could not seek to file offset %r, re-starting upload of %r from 0', resume_offset, url
+            print('Could not seek to file offset %r, re-starting upload of %r from 0', resume_offset, url)
             fileobject.seek(0)
 
 
@@ -1218,7 +1218,7 @@ class JFS(object):
         md5hash = calculate_md5(fileobject)
 
         log.debug('posting content (len %s, hash %s) to url %r', contentlen, md5hash, url)
-        print 'posting content (len %s, hash %s) to url %r', contentlen, md5hash, url
+        print('posting content (len %s, hash %s) to url %r', contentlen, md5hash, url)
         try:
             mtime = os.path.getmtime(fileobject.name)
             timestamp = datetime.datetime.fromtimestamp(mtime).isoformat()

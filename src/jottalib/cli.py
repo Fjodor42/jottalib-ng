@@ -182,6 +182,7 @@ def upload(argv=None):
         target_dir = root_folder
     upload = target_dir.up(args.localfile, os.path.basename(decoded_filename), upload_callback=callback)
     print('%s uploaded successfully' % decoded_filename)
+    print(upload)
     return True # TODO: check return value
 
 
@@ -239,24 +240,55 @@ def ls(argv=None):
     if args.item:
         if args.item.startswith('//'):
             # break out of root_folder
-            item_path = posixpath.join(jfs.rootpath, args.item[1:])
+            mountpoint = posixpath.join(*posixpath.join(args.item.split("/")[3:4]))
+            path = posixpath.join(*posixpath.join(args.item.split("/")[4:]))
+
+            logging.debug('len: ' + str(len(args.item.split("/"))))
+
+            if len(args.item.split("/")) == 4:
+                path += u'/'
+
+            logging.debug('mountpoint = ' + mountpoint)
+            logging.debug('path = ' + path)
+
+            root_folder = get_root_dir(jfs, mountpoint=mountpoint)
+            item_path = posixpath.join(root_folder.path, path)
         else:
             item_path = posixpath.join(root_folder.path, args.item)
+
+        logging.debug('item_path = ' + item_path)
         item = jfs.getObject(item_path)
     else:
         item = root_folder
+
     timestamp_width = 25
     logging.debug('about to ls %r', item)
-    if isinstance(item, JFS.JFSFolder):
-        files = [(
-            f.created,
-            print_size(f.size, humanize=args.humanize) if f.size else u'',
-            u'D' if f.deleted else u'I' if f.state == 'INCOMPLETE' else u' ',
-            f.name) for f in item.files() if not f.deleted and f.state != 'INCOMPLETE' or args.all]
+
+    logging.debug('item.instance: ' + str(item))
+
+    if isinstance(item, JFS.JFSFolder) or isinstance(item, JFS.JFSMountPoint):
+        logging.debug('JFSMountPoint')
+
+        logging.debug('item.files: ' + str(item.files()))
+
+        files = []
+	for f in item.files():
+            logging.debug('f: ' + str(f))
+            if not f is None:
+                files.append([f.created, print_size(f.size, humanize=args.humanize) if f.size else u'',
+                          u'D' if f.deleted else u'I' if f.state == 'INCOMPLETE' else u' ',
+                          f.name])
+#        files = [(
+#            f.created,
+#            print_size(f.size, humanize=args.humanize) if f.size else u'',
+#            u'D' if f.deleted else u'I' if f.state == 'INCOMPLETE' else u' ',
+#            f.name) for f in item.files() if not f is None or (f.deleted and f.state != 'INCOMPLETE' or args.all)]
+
         folders = [(u' '*timestamp_width, u'', u'D' if f.deleted else u' ', unicode(f.name))
-                   for f in item.folders() if not f.deleted or args.all]
+                   for f in item.folders() if not f is None or (not f.deleted or args.all)]
         widest_size = 0
         for f in files:
+            logging.debug('f in files: ' + str(f))
             if len(f[1]) > widest_size:
                 widest_size = len(f[1])
         for item in sorted(files + folders, key=lambda t: t[3]):
@@ -264,6 +296,25 @@ def ls(argv=None):
                 print(u'%s %s %s %s' % (item[0], item[1].rjust(widest_size), item[2], item[3]))
             else:
                 print(u'%s %s %s' % (item[0], item[1].rjust(widest_size), item[3]))
+#    elif isinstance(item, JFS.JFSFolder):
+#        files = [(
+#            f.created,
+#            print_size(f.size, humanize=args.humanize) if f.size else u'',
+#            u'D' if f.deleted else u'I' if f.state == 'INCOMPLETE' else u' ',
+#            f.name) for f in item.files() if not f.deleted and f.state != 'INCOMPLETE' or args.all]
+#
+#
+#        folders = [(u' '*timestamp_width, u'', u'D' if f.deleted else u' ', unicode(f.name))
+#                   for f in item.folders() if not f.deleted or args.all]
+#        widest_size = 0
+#        for f in files:
+#            if len(f[1]) > widest_size:
+#                widest_size = len(f[1])
+#        for item in sorted(files + folders, key=lambda t: t[3]):
+#            if args.all:
+#                print(u'%s %s %s %s' % (item[0], item[1].rjust(widest_size), item[2], item[3]))
+#            else:
+#                print(u'%s %s %s' % (item[0], item[1].rjust(widest_size), item[3]))
     else:
         print(' '.join([str(item.created), print_size(item.size, humanize=args.humanize), item.name]))
     return True # TODO: check return value of command
@@ -514,7 +565,15 @@ def cat(argv=None):
     jfs = JFS.JFS()
     if args.file.startswith('//'):
         # break out of root_folder
-        item_path = posixpath.join(jfs.rootpath, args.file[1:])
+
+        mountpoint = posixpath.join(*posixpath.join(args.file.split("/")[3:4]))
+        path = posixpath.join(*posixpath.join(args.file.split("/")[4:]))
+        logging.debug('mountpoint = ' + mountpoint)
+        logging.debug('path = ' + path)
+
+        root_folder = get_root_dir(jfs, mountpoint=mountpoint)
+        item_path = posixpath.join(root_folder.path, path)
+#        item_path = posixpath.join(jfs.rootpath, args.file[1:])
     else:
         root_dir = get_root_dir(jfs)
         item_path = posixpath.join(root_dir.path, args.file)

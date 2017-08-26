@@ -34,7 +34,7 @@ import requests
 from requests.utils import quote
 import netrc
 import requests_toolbelt
-from filewrapper import HttpFileWrapper
+from requests_toolbelt.filewrapper import HttpFileWrapper
 import certifi
 
 import lxml, lxml.objectify
@@ -259,6 +259,8 @@ class JFSFolder(object):
             self.sync()
         try:
             #return [JFSFile(f, self.jfs, self.path) for f in self.folder.files.iterchildren()]
+            log.debug('self.folder.files: ' + str(self.folder.files))
+
             for _f in self.folder.files.iterchildren():
                 if hasattr(_f, 'currentRevision'): # a normal file
                     yield JFSFile(_f, self.jfs, self.path)
@@ -266,8 +268,8 @@ class JFSFolder(object):
                     yield JFSIncompleteFile(_f, self.jfs, self.path)
 
         except AttributeError:
-            while False:
-                yield None
+            #while False:
+            yield None
             #return [x for x in []]
 
     def folders(self):
@@ -720,8 +722,20 @@ class JFSFile(JFSIncompleteFile):
 class JFSMountPoint(JFSFolder):
     'OO interface to a mountpoint, for convenient access. Type less, do more.'
     def __init__(self, mountpointobject, jfs, parentpath): # folderobject from lxml.objectify
+        log.debug('parentpath: ' + str(parentpath))
+
         super(JFSMountPoint, self).__init__(mountpointobject, jfs, parentpath)
         self.folder = mountpointobject # name it 'folder' because of inheritance
+        self.myParentPath = parentpath
+       #JFSMountPoint.parentpath.fset(self,parentpath)
+
+    @property
+    def path(self):
+        jottadev = self.jfs.get_jfs_device('Jotta')
+	log.debug('**********' + jottadev.path)
+        result = '%s/%s' % (jottadev.path, self.folder.name)
+        log.debug('JFSMountPoint, path: %r', result)
+        return result
 
     def delete(self):
         "override inherited method that makes no sense here"
@@ -730,6 +744,35 @@ class JFSMountPoint(JFSFolder):
     def rename(self, newpath):
         "override inherited method that makes no sense here"
         raise JFSError('Cant rename a mountpoint')
+
+#    @property
+#    def path(self):
+#        #log.debug('JFSMountPoint, path: %r + %r', self.parentPath, self.name)
+#        #return '%s/%s' % (self.parentPath)
+#        result = JFSMountPoint.path.fget(self)
+#        log.debug('result: ' + result)
+#        return result
+#
+#
+#    def folders(self):
+#        try:
+#            log.debug('self.folder.folders: ' + str(self.folder.folders))
+#
+#            result = self.folder.folders()
+#        except AttributeError:
+#            result = []
+#
+#        return result
+#
+#    def files(self):
+#        try:
+#            log.debug('self.folder.files: ' + str(self.folder.files))
+#
+#            result =  self.folder.files()
+#        except AttributeError:
+#            result = []
+#
+#        return result
 
     @property
     def name(self):
@@ -975,7 +1018,11 @@ class JFS(object):
         'Make a GET request for url, with or without caching'
         if not url.startswith('http'):
             # relative url
+            if url.startswith('//'):
+                url = url[1:]
             url = self.rootpath + url
+            print url
+
         log.debug("getting url: %r, extra_headers=%r, params=%r", url, extra_headers, params)
         if extra_headers is None: extra_headers={}
         r = self.session.get(url, headers=extra_headers, params=params, timeout=1800) #max retries is set in __init__
@@ -1078,13 +1125,17 @@ class JFS(object):
         'HTTP Post files[] or content (unicode string) to url'
         if not url.startswith('http'):
             # relative url
+            if url.startswith('//'):
+                url = url[1:]
             url = self.rootpath + url
+            print url
 
         log.debug('posting content (len %s) to url %s', len(content) if content is not None else '?', url)
+        print 'posting content (len %s) to url %s', len(content) if content is not None else '?', url
         headers = self.session.headers.copy()
         headers.update(**extra_headers)
 
-        monitor = content # *Should* be None if files isn't
+	monitor = content # *Should* be None if files isn't
 
         if not files is None:
             # In this case, we ensure that the content parameter is disregarded as per previous comment
@@ -1104,6 +1155,11 @@ class JFS(object):
         url = self.escapeUrl(url)
 
         # The monitor variable is now either a monitor, an encoder or the content string
+
+	if isinstance(monitor, requests_toolbelt.MultipartEncoderMonitor) or isinstance(monitor, requests_toolbelt.MultipartEncoder):
+            monitor._read = monitor.read
+            monitor.read = lambda size: monitor._read(1024*1024)
+
         r = self.session.post(url, data=monitor, params=params, headers=headers)
 
         log.debug('RESPONSE: ' + str(r))
@@ -1153,8 +1209,9 @@ class JFS(object):
         except IOError as e:
             log.exception(e)
             log.warning('Could not seek to file offset %r, re-starting upload of %r from 0',
-                        resume_offset,
-                        url)
+                         resume_offset,
+                         url)
+            print 'Could not seek to file offset %r, re-starting upload of %r from 0', resume_offset, url
             fileobject.seek(0)
 
 
@@ -1162,6 +1219,7 @@ class JFS(object):
         md5hash = calculate_md5(fileobject)
 
         log.debug('posting content (len %s, hash %s) to url %r', contentlen, md5hash, url)
+        print 'posting content (len %s, hash %s) to url %r', contentlen, md5hash, url
         try:
             mtime = os.path.getmtime(fileobject.name)
             timestamp = datetime.datetime.fromtimestamp(mtime).isoformat()
@@ -1170,14 +1228,18 @@ class JFS(object):
                 log.exception('Problems getting mtime from fileobjet: %r', e)
             timestamp = datetime.datetime.now().isoformat()
         params = {'cphash': md5hash}
-
         encoder = requests_toolbelt.MultipartEncoder({
              'md5': md5hash,
              'modified': timestamp,
              'created': timestamp,
-             'file': (os.path.basename(url), HttpFileWrapper(fileobject, 65536), 'application/octet-stream'),
+#             'file': (os.path.basename(url), HttpFileWrapper(fileobject, 65536), 'application/octet-stream'),
+             'file': (os.path.basename(url), fileobject, 'application/octet-stream'),
         })
-        headers = {'JMd5':md5hash,
+
+        encoder._read = encoder.read
+        encoder.read = lambda size: encoder._read(1024*1024)
+
+        headers = {'JMd5': md5hash,
                    'JCreated': timestamp,
                    'JModified': timestamp,
                    'X-Jfs-DeviceName': 'Jotta',
@@ -1187,12 +1249,11 @@ class JFS(object):
                    'content-type': encoder.content_type,
                    }
         fileobject.seek(0) # rewind read index for requests.post
-
         files = {'md5': md5hash,
                  'modified': timestamp,
                  'created': timestamp,
-                 'file': (os.path.basename(url), HttpFileWrapper(fileobject, 65536), 'application/octet-stream')}
-
+#                 'file': (os.path.basename(url), HttpFileWrapper(fileobject, 65536), 'application/octet-stream')}
+                 'file': (os.path.basename(url), fileobject, 'application/octet-stream')}
         return self.post(url, None, files=files, params=params, extra_headers=headers, upload_callback=upload_callback)
 
     def new_device(self, name, type):
@@ -1235,4 +1296,12 @@ class JFS(object):
     def usage(self):
         'Return int of storage usage in bytes'
         return int(self.fs.usage) if self.fs is not None else 0
+
+    def get_jfs_device(self,device='Jotta'): #Default device is Jotta but can be changed
+        jottadev = None
+        for j in self.devices: # find Jotta/Shared folder
+            if j.name == device:
+                jottadev = j
+        return jottadev
+
 

@@ -261,7 +261,7 @@ class TestJFSDevice:
         dev = JFS.JFSDevice(o, jfs, parentpath=jfs.rootpath)
         assert isinstance(o, lxml.objectify.ObjectifiedElement)
         # Test that mountpoints are populated correctly"
-        assert sorted(dev.mountPoints.keys()) == ['Archive', 'Photos', 'Shared', 'Sync']
+        assert sorted(dev.mountPoints.keys()) == ['Archive', 'Shared', 'Sync']
         assert all(isinstance(item, JFS.JFSMountPoint) for item in dev.mountPoints.values())
         # test "mountPoint" may be either an actual mountPoint element from JFSDevice.mountPoints{} or its .name. '
         assert all(isinstance(item, JFS.JFSFile) for item in dev.files('Archive'))

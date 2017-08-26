@@ -32,6 +32,7 @@ from six import StringIO
 import pytest # pip install pytest
 
 # import jotta
+
 from jottalib import JFS, __version__, cli
 
 WIN32 = (sys.platform == "win32")
@@ -80,6 +81,7 @@ def test_upload(tmpdir):
 
     testfile = tmpdir.join('test_upload-%s.txt' % timestamp()).ensure()
     testfile.write(TESTFILEDATA)
+    assert WIN32 == True
     assert cli.upload([str(testfile), '//Jotta/Archive/'])
     fi = jfs.getObject('//Jotta/Archive/%s' % str(testfile.basename))
     assert isinstance(fi, JFS.JFSFile)

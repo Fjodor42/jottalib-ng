@@ -1134,7 +1134,7 @@ class JFS(object):
         headers = self.session.headers.copy()
         headers.update(**extra_headers)
 
-	monitor = content # *Should* be None if files isn't
+        monitor = content # *Should* be None if files isn't
 
         if not files is None:
             # In this case, we ensure that the content parameter is disregarded as per previous comment
@@ -1155,7 +1155,7 @@ class JFS(object):
 
         # The monitor variable is now either a monitor, an encoder or the content string
 
-	if isinstance(monitor, requests_toolbelt.MultipartEncoderMonitor) or isinstance(monitor, requests_toolbelt.MultipartEncoder):
+        if isinstance(monitor, requests_toolbelt.MultipartEncoderMonitor) or isinstance(monitor, requests_toolbelt.MultipartEncoder):
             monitor._read = monitor.read
             monitor.read = lambda size: monitor._read(1024*1024)
 

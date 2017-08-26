@@ -272,7 +272,7 @@ def ls(argv=None):
         logging.debug('item.files: ' + str(item.files()))
 
         files = []
-	for f in item.files():
+        for f in item.files():
             logging.debug('f: ' + str(f))
             if not f is None:
                 files.append([f.created, print_size(f.size, humanize=args.humanize) if f.size else u'',

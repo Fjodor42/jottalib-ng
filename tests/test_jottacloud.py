@@ -66,13 +66,14 @@ class TestXattr:
         assert x.get('user.jottalib.md5') == md5
         assert x.get('user.jottalib.filesize') == str(os.path.getsize(temp.name)) # xattr always stores strings
 
-
+@pytest.mark.xfailif(WIN32==True,
+                        reason="TODO: Get it to work on WIN32")
 def test_get_jottapath(tmpdir):
     # def get_jottapath(localtopdir, dirpath, jottamountpoint):
     topdir = tmpdir.mkdir("topdir")
     subdir = topdir.mkdir("subdir1").mkdir("subdir2")
-    jottapath = jottacloud.get_jottapath(str(topdir), str(subdir), "/TEST_ROOT")
-    assert jottapath == "/TEST_ROOT/topdir/subdir1/subdir2"
+    jottapath = jottacloud.get_jottapath(str(topdir), str(subdir), "/Sync")
+    assert jottapath == "/Sync/topdir/subdir1/subdir2"
 
 
 def test_new():

@@ -475,7 +475,6 @@ class TestJFSFile:
         #TODO: test file operations: .stream(), .rename(), .read(), .read_partial, .delete etc
         #TODO: test revisions
 
-    @pytest.mark.xfail(reason="Pending fix on bug #100")
     def test_on_the_fly_unicode_contents(self):
         data = six.StringIO(u'123abcæøå')
         p = "//Jotta/Archive/testfile_on_the_fly_unicode_contents.txt"

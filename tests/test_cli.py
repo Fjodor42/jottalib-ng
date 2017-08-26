@@ -72,13 +72,15 @@ def test_mkdir():
     assert isinstance(d, JFS.JFSFolder)
     assert d.is_deleted() == False
 
+@pytest.mark.xfailif(WIN32==True,
+                        reason="TODO: Get it to work on WIN32")
 def test_upload(tmpdir):
     with pytest.raises(SystemExit):
         cli.upload([]) # argparse should raise systemexit without the mandatory arguments
 
     testfile = tmpdir.join('test_upload-%s.txt' % timestamp()).ensure()
     testfile.write(TESTFILEDATA)
-    assert cli.upload([str(testfile), '//Jotta/Archive'])
+    assert cli.upload([str(testfile), '//Jotta/Archive/'])
     fi = jfs.getObject('//Jotta/Archive/%s' % str(testfile.basename))
     assert isinstance(fi, JFS.JFSFile)
     assert fi.read() == TESTFILEDATA

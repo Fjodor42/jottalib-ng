@@ -68,7 +68,7 @@ def test_mkdir():
     with pytest.raises(SystemExit):
         cli.mkdir([]) # argparse should raise systemexit without the mandatory arguments
     assert cli.mkdir(['testmkdir'])
-    d = jfs.getObject('/Jotta/Sync/testmkdir')
+    d = jfs.getObject('//Jotta/Sync/testmkdir')
     assert isinstance(d, JFS.JFSFolder)
     assert d.is_deleted() == False
 
@@ -79,7 +79,7 @@ def test_upload(tmpdir):
     testfile = tmpdir.join('test_upload-%s.txt' % timestamp()).ensure()
     testfile.write(TESTFILEDATA)
     assert cli.upload([str(testfile), '//Jotta/Archive'])
-    fi = jfs.getObject('/Jotta/Archive/%s' % str(testfile.basename))
+    fi = jfs.getObject('//Jotta/Archive/%s' % str(testfile.basename))
     assert isinstance(fi, JFS.JFSFile)
     assert fi.read() == TESTFILEDATA
     fi.delete()
@@ -102,7 +102,7 @@ def test_rm():
     with pytest.raises(SystemExit):
         cli.rm([]) # argparse should raise systemexit without the mandatory arguments
     assert cli.rm(['testmkdir'])
-    d = jfs.getObject('/Jotta/Sync/testmkdir')
+    d = jfs.getObject('//Jotta/Sync/testmkdir')
     assert isinstance(d, JFS.JFSFolder)
     assert d.is_deleted() == True
 
@@ -110,10 +110,10 @@ def test_cat():
     with pytest.raises(SystemExit):
         cli.cat([]) # argparse should raise systemexit without the mandatory arguments
     testcontents = u'12345test'
-    testpath = '/Jotta/Archive/Test/test.txt'
+    testpath = '//Jotta/Archive/Test/test.txt'
     d = jfs.up(testpath, StringIO(testcontents))
     assert isinstance(d, JFS.JFSFile)
-    assert cli.cat(['/%s' % testpath,]) == testcontents
+    assert cli.cat([testpath,]) == testcontents
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
@@ -123,7 +123,7 @@ def test_restore():
     assert cli.mkdir(['testmkdir'])
     assert cli.rm(['testmkdir'])
     assert cli.restore(['testmkdir'])
-    d = jfs.getObject('/Jotta/Sync/testmkdir')
+    d = jfs.getObject('//Jotta/Sync/testmkdir')
     assert isinstance(d, JFS.JFSFolder)
     assert d.is_deleted() == False
 
@@ -146,7 +146,7 @@ def test_download(tmpdir):
     with pytest.raises(SystemExit):
         cli.download([]) # argparse should raise systemexit without the mandatory arguments
     testcontents = u'12345test'
-    testdir = '/Jotta/Archive/Test'
+    testdir = '//Jotta/Archive/Test'
     testfile = 'test.txt'
     testpath = posixpath.join(testdir, testfile)
     d = jfs.up(testpath, StringIO(testcontents))

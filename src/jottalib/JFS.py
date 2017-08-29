@@ -28,6 +28,7 @@ import posixpath, logging, datetime, hashlib
 import tempfile
 from collections import namedtuple
 import six
+from six.moves import urllib
 
 # importing external dependencies (pip these, please!)
 import requests
@@ -1009,7 +1010,27 @@ class JFS(object):
     def escapeUrl(self, url):
         if isinstance(url, six.text_type):
             url = url.encode('utf-8') # urls have to be bytestrings
-        return quote(url, safe=self.rootpath)
+
+        base_path = urllib.parse.urlparse(self.rootpath)[2] # /jfs/username (may be an email address)
+        up_path = self.rootpath.replace('www', 'up')
+
+        # Make sure we don't mangle the '@' if the username is an email adress
+        if url.startswith(self.rootpath):
+            jotta_path = url.replace(self.rootpath, '')
+            jotta_path = quote(jotta_path)
+            jotta_path = self.rootpath + jotta_path
+        elif url.startswith(up_path):
+            jotta_path = url.replace(up_path, '')
+            jotta_path = quote(jotta_path)
+            jotta_path = up_path + jotta_path
+        elif url.startswith(base_path):
+            jotta_path = url.replace(base_path, '')
+            jotta_path = quote(jotta_path)
+            jotta_path = base_path + jotta_path
+        else:
+            jotta_path = quote(url)
+
+        return jotta_path
 
     def request(self, url, extra_headers=None, params=None):
         'Make a GET request for url, with or without caching'
@@ -1018,7 +1039,6 @@ class JFS(object):
             if url.startswith('//'):
                 url = url[1:]
             url = self.rootpath + url
-            print(url)
 
         log.debug("getting url: %r, extra_headers=%r, params=%r", url, extra_headers, params)
         if extra_headers is None: extra_headers={}
@@ -1125,7 +1145,6 @@ class JFS(object):
             if url.startswith('//'):
                 url = url[1:]
             url = self.rootpath + url
-            print(url)
 
         log.debug('posting content (len %s) to url %s', len(content) if content is not None else '?', url)
         print('posting content (len %s) to url %s', len(content) if content is not None else '?', url)

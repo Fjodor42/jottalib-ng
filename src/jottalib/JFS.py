@@ -1008,9 +1008,6 @@ class JFS(object):
         self.session.close()
 
     def escapeUrl(self, url):
-        if isinstance(url, six.text_type):
-            url = url.encode('utf-8') # urls have to be bytestrings
-
         base_path = urllib.parse.urlparse(self.rootpath)[2] # /jfs/username (may be an email address)
         up_path = self.rootpath.replace('www', 'up')
 
@@ -1029,6 +1026,9 @@ class JFS(object):
             jotta_path = base_path + jotta_path
         else:
             jotta_path = quote(url)
+
+        if isinstance(jotta_path, six.text_type):
+            jotta_path = jotta_path.encode('utf-8') # urls have to be bytestrings
 
         return jotta_path
 

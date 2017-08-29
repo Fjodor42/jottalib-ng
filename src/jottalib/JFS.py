@@ -267,9 +267,7 @@ class JFSFolder(object):
                     yield JFSIncompleteFile(_f, self.jfs, self.path)
 
         except AttributeError:
-            #while False:
-            yield None
-            #return [x for x in []]
+            pass
 
     def folders(self):
         if not self.synced:

@@ -28,7 +28,6 @@ import posixpath, logging, datetime, hashlib
 import tempfile
 from collections import namedtuple
 import six
-from six.moves import urllib
 
 # importing external dependencies (pip these, please!)
 import requests
@@ -1008,6 +1007,10 @@ class JFS(object):
         self.session.close()
 
     def escapeUrl(self, url):
+        if isinstance(url, six.text_type):
+            url = url.encode('utf-8') # urls have to be bytestrings
+        return quote(url, safe=self.rootpath)
+
         base_path = urllib.parse.urlparse(self.rootpath)[2] # /jfs/username (may be an email address)
         up_path = self.rootpath.replace('www', 'up')
 
@@ -1039,6 +1042,7 @@ class JFS(object):
             if url.startswith('//'):
                 url = url[1:]
             url = self.rootpath + url
+            print(url)
 
         log.debug("getting url: %r, extra_headers=%r, params=%r", url, extra_headers, params)
         if extra_headers is None: extra_headers={}
@@ -1145,6 +1149,7 @@ class JFS(object):
             if url.startswith('//'):
                 url = url[1:]
             url = self.rootpath + url
+            print(url)
 
         log.debug('posting content (len %s) to url %s', len(content) if content is not None else '?', url)
         print('posting content (len %s) to url %s', len(content) if content is not None else '?', url)

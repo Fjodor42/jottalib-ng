@@ -1037,9 +1037,9 @@ class JFS(object):
 
     def request(self, url, extra_headers=None, params=None):
         'Make a GET request for url, with or without caching'
-        if not url.startswith('http'):
+        if not str(url).startswith('http'):
             # relative url
-            if url.startswith('//'):
+            if str(url).startswith('//'):
                 url = url[1:]
             url = self.rootpath + url
             print(url)

@@ -155,13 +155,13 @@ def test_download(tmpdir):
     testpath = posixpath.join(testdir, testfile)
     d = jfs.up(testpath, StringIO(testcontents))
     with tmpdir.as_cwd():
-        assert cli.download(['/%s' % testpath])
-        assert cli.download(['/%s' % testpath, '--checksum'])
+        assert cli.download(['%s' % testpath])
+        assert cli.download(['%s' % testpath, '--checksum'])
         #TODO: implement when --resume is - assert cli.download(['/%s' % testpath, '--resume'])
         assert tmpdir.join(testfile).read_text('utf-8') == testcontents
         # download the whole directlry
-        assert cli.download(['/%s' % testdir])
-        assert cli.download(['/%s' % testdir, '--checksum'])
+        assert cli.download(['%s' % testdir])
+        assert cli.download(['%s' % testdir, '--checksum'])
         assert tmpdir.join('Test').join(testfile).read() == testcontents
     cli.rm([testdir])
 # TODO:

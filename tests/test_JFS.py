@@ -141,7 +141,7 @@ class TestJFS:
         t = jfs.up(p, six.BytesIO(TESTFILEDATA))
         f = jfs.getObject(p)
         assert isinstance(f, JFS.JFSFile)
-        assert f.read() == TESTFILEDATA
+        assert f.read().encode('utf-8') == TESTFILEDATA
         f.delete()
 
     def test_up_and_readpartial(self):
@@ -199,10 +199,10 @@ class TestJFS:
                  'My,funky,file.txt', # file name with commas
                 ]
         if sys.platform != "win32":
-            # some filenames are not allowed on fat32 
+            # some filenames are not allowed on fat32
             test = tests + ['My?funky?file.txt', # file name with question marks
                             'My:funky:file.txt', # file name with colon signs
-                            ] 
+                            ]
 
         for f in tests:
             p = posixpath.join('/Jotta/Archive', f)

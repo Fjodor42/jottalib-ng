@@ -28,9 +28,10 @@ import posixpath, logging, datetime, hashlib
 import tempfile
 from collections import namedtuple
 from six.moves.urllib.parse import quote
-from six.moves import urllib
+import six.moves.urllib as urllib
 from six import StringIO as StringIO
 import six
+import io
 
 # importing external dependencies (pip these, please!)
 import requests
@@ -566,7 +567,12 @@ class JFSFile(JFSIncompleteFile):
     def read(self):
         'Get the file contents as string'
         #return self.jfs.raw('%s?mode=bin' % self.path)
-        return self.jfs.raw(url=self.path, params={'mode':'bin'})
+        result = self.jfs.raw(url=self.path, params={'mode':'bin'})
+
+        if not isinstance(result, six.text_type):
+            result = result.decode(sys.getfilesystemencoding())
+
+        return result
         """
             * name = 'jottacloud.sync.pdfname'
             * uuid = '37530f11-d55b-4f31-acf4-27854813cd34'
@@ -1008,37 +1014,22 @@ class JFS(object):
         self.session.close()
 
     def escapeUrl(self, url):
+#        if not isinstance(url, six.text_type):
+#            url = url.decode('utf-8') # urls have to be bytestrings
         if isinstance(url, six.text_type):
             url = url.encode('utf-8') # urls have to be bytestrings
-
-        base_path = urllib.parse.urlparse(self.rootpath)[2] # /jfs/username (may be an email address)
-        up_path = self.rootpath.replace('www', 'up')
-
-        # Make sure we don't mangle the '@' if the username is an email adress
-        if str(url).startswith(self.rootpath):
-            jotta_path = url.replace(self.rootpath, '')
-            jotta_path = quote(jotta_path)
-            jotta_path = self.rootpath + jotta_path
-        elif str(url).startswith(up_path):
-            jotta_path = url.replace(up_path, '')
-            jotta_path = quote(jotta_path)
-            jotta_path = up_path + jotta_path
-        elif str(url).startswith(base_path):
-            jotta_path = url.replace(base_path, '')
-            jotta_path = quote(jotta_path)
-            jotta_path = base_path + jotta_path
-        else:
-            jotta_path = quote(url)
-
-        return jotta_path
+        return quote(url, safe='@/:')
 
     def request(self, url, extra_headers=None, params=None):
         'Make a GET request for url, with or without caching'
-        if not str(url).startswith('http'):
+        if isinstance(url, six.text_type):
+            url = url.encode('utf-8') # urls have to be bytestrings
+
+        if not url.startswith(b'http'):
             # relative url
-            if str(url).startswith('//'):
+            if url.startswith(b'//'):
                 url = url[1:]
-            url = self.rootpath + url
+            url = self.rootpath.encode('utf-8') + url
             print(url)
 
         log.debug("getting url: %r, extra_headers=%r, params=%r", url, extra_headers, params)
@@ -1178,6 +1169,8 @@ class JFS(object):
             monitor._read = monitor.read
             monitor.read = lambda size: monitor._read(1024*1024)
 
+        print(monitor)
+
         r = self.session.post(url, data=monitor, params=params, headers=headers)
 
         log.debug('RESPONSE: ' + str(r))
@@ -1216,6 +1209,11 @@ class JFS(object):
 
         if isinstance(fileobject, StringIO):
             fileobject = six.BytesIO(fileobject.getvalue().encode('utf-8'))
+        elif isinstance(fileobject, io.TextIOWrapper):
+            _fileobject = fileobject
+            bytesobject = six.BytesIO()
+            bytesobject.write(_fileobject.buffer.read())
+            fileobject = bytesobject
 
         # Calculate file length
         fileobject.seek(0,2)

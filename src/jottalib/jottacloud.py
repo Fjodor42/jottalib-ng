@@ -18,7 +18,7 @@
 #
 # Copyright 2014-2016 Håvard Gulldahl <havard@gulldahl.no>
 
-import sys, os, os.path, posixpath, logging, collections, stat
+import sys, os, os.path, posixpath, logging, collections, stat, six
 
 log = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ def _decode_filename_to_unicode(f):
     If the argument already is unicode, return as is'''
 
     log.debug('_decode_filename_to_unicode(%s)', repr(f))
-    if isinstance(f, unicode):
+    if isinstance(f, six.text_type):
         return f
     try:
         return f.decode(sys.getfilesystemencoding())
@@ -268,9 +268,9 @@ def setxattrhash(filename, md5hash):
         return False
     try:
         x = xattr(filename)
-        x.set('user.jottalib.md5', md5hash)
-        x.set('user.jottalib.timestamp', str(os.path.getmtime(filename)))
-        x.set('user.jottalib.filesize', str(os.path.getsize(filename)))
+        x.set('user.jottalib.md5', md5hash.encode('utf-8'))
+        x.set('user.jottalib.timestamp', str(os.path.getmtime(filename)).encode('utf-8'))
+        x.set('user.jottalib.filesize', str(os.path.getsize(filename)).encode('utf-8'))
         return True
     except IOError:
         # no file system support
@@ -287,12 +287,15 @@ def getxattrhash(filename):
         return None
     try:
         x = xattr(filename)
-        if x.get('user.jottalib.filesize') != str(os.path.getsize(filename)) or x.get('user.jottalib.timestamp') != str(os.path.getmtime(filename)):
+        print(x.get('user.jottalib.filesize'))
+        print(x.get('user.jottalib.timestamp'))
+        print(x.get('user.jottalib.md5'))
+        if x.get('user.jottalib.filesize').decode('utf-8') != str(os.path.getsize(filename)) or x.get('user.jottalib.timestamp').decode('utf-8') != str(os.path.getmtime(filename)):
             x.remove('user.jottalib.filesize')
             x.remove('user.jottalib.timestamp')
             x.remove('user.jottalib.md5')
             return None # this is not the file we have calculated md5 for
-        return x.get('user.jottalib.md5')
+        return x.get('user.jottalib.md5').decode('utf-8')
     except Exception as e:
         log.debug('setxattr got exception %r', e)
         return None

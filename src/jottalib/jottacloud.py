@@ -199,13 +199,13 @@ def new(localfile, jottapath, JFS):
     """Upload a new file from local disk (doesn't exist on JottaCloud).
 
     Returns JottaFile object"""
-    with open(localfile) as lf:
+    with open(localfile, 'rb') as lf:
         _new = JFS.up(jottapath, lf)
     return _new
 
 def resume(localfile, jottafile, JFS):
     """Continue uploading a new file from local file (already exists on JottaCloud"""
-    with open(localfile) as lf:
+    with open(localfile, 'rb') as lf:
         _complete = jottafile.resume(lf)
     return _complete
 
@@ -218,7 +218,7 @@ def replace_if_changed(localfile, jottapath, JFS):
     jf = JFS.getObject(jottapath)
     lf_hash = getxattrhash(localfile) # try to read previous hash, stored in xattr
     if lf_hash is None:               # no valid hash found in xattr,
-        with open(localfile) as lf:
+        with open(localfile, 'rb') as lf:
             lf_hash = calculate_md5(lf) # (re)calculate it
     if type(jf) == JFSIncompleteFile:
         log.debug("Local file %s is incompletely uploaded, continue", localfile)

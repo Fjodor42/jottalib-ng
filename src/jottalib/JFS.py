@@ -570,7 +570,7 @@ class JFSFile(JFSIncompleteFile):
         result = self.jfs.raw(url=self.path, params={'mode':'bin'})
 
         if not isinstance(result, six.text_type):
-            result = result.decode(sys.getfilesystemencoding())
+            result = result.decode('utf-8')
 
         return result
         """

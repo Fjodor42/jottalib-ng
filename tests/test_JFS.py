@@ -25,7 +25,7 @@ __author__ = 'havard@gulldahl.no'
 import sys, os, logging, datetime, types
 import tempfile, posixpath, urllib
 import six
-from six.moves import cStringIO as StringIO
+from six import StringIO
 
 
 # import dependencies
@@ -178,7 +178,9 @@ class TestJFS:
 
         assert isinstance(jfs.getObject('//Jotta'), JFS.JFSDevice)
         assert isinstance(jfs.getObject('//Jotta/Archive'), JFS.JFSMountPoint)
-        assert isinstance(jfs.getObject('//Jotta/Archive/test'), JFS.JFSFolder)
+        new_dir = jfs.getObject('//Jotta/Archive').mkdir('Test')
+        assert isinstance(jfs.getObject('//Jotta/Archive/Test'), JFS.JFSFolder)
+        new_dir.delete()
         #TODO: test with a python-requests object
 
     def test_urlencoded_filename(self, tmpdir):

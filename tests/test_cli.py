@@ -150,6 +150,7 @@ def test_download(tmpdir):
         cli.download([]) # argparse should raise systemexit without the mandatory arguments
     testcontents = u'12345test'
     testdir = '//Jotta/Archive/Test'
+    cli.mkdir([testdir])
     testfile = 'test.txt'
     testpath = posixpath.join(testdir, testfile)
     d = jfs.up(testpath, StringIO(testcontents))
@@ -162,7 +163,7 @@ def test_download(tmpdir):
         assert cli.download(['/%s' % testdir])
         assert cli.download(['/%s' % testdir, '--checksum'])
         assert tmpdir.join('Test').join(testfile).read() == testcontents
-
+    cli.rm([testdir])
 # TODO:
 
 # def parse_args_and_apply_logging_level(parser):

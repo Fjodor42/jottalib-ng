@@ -23,7 +23,7 @@
 export PYTHONPATH=/home/sune/src/fjodor42/jottalib/src
 TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir');
 STAMP=$(date +%s);
-TESTFILE="$TMPDIR/Jotta/Archive/test/jottafuse.clitest.${STAMP}.txt";
+TESTFILE="$TMPDIR/Jotta/Archive/Test/jottafuse.clitest.${STAMP}.txt";
 INDIR=$(dirname "$TESTFILE");
 FUSEDIR="$TMPDIR/FUSEMOUNT-${STAMP}";
 JOTTADIR="//Jotta/Archive/test-${STAMP}"

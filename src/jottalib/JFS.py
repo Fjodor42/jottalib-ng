@@ -27,11 +27,13 @@ import sys, os, os.path, time
 import posixpath, logging, datetime, hashlib
 import tempfile
 from collections import namedtuple
+from six.moves.urllib.parse import quote
+from six.moves import urllib
+from six import StringIO as StringIO
 import six
 
 # importing external dependencies (pip these, please!)
 import requests
-from requests.utils import quote
 import netrc
 import requests_toolbelt
 import certifi
@@ -496,7 +498,7 @@ class JFSIncompleteFile(JFSCorruptFile):
     def resume(self, data):
         'Resume uploading an incomplete file, after a previous upload was interrupted. Returns new file object'
         if not hasattr(data, 'read'):
-            data = six.BytesIO(data)#StringIO(data)
+            data = six.BytesIO(data) #StringIO(data)
 
         #Check that we actually know from what byte to resume.
         #If self.size === -1, it means we never got the value from the server.
@@ -592,7 +594,7 @@ class JFSFile(JFSIncompleteFile):
     def write(self, data):
         'Put, possibly replace, file contents with (new) data'
         if not hasattr(data, 'read'):
-            data = six.BytesIO(data)#StringIO(data)
+            data = six.BytesIO(data) #StringIO(data)
         self.jfs.up(self.path, data)
 
     def share(self):
@@ -749,7 +751,6 @@ class JFSMountPoint(JFSFolder):
 #        result = JFSMountPoint.path.fget(self)
 #        log.debug('result: ' + result)
 #        return result
-#
 #
 #    def folders(self):
 #        try:
@@ -1009,7 +1010,6 @@ class JFS(object):
     def escapeUrl(self, url):
         if isinstance(url, six.text_type):
             url = url.encode('utf-8') # urls have to be bytestrings
-        return quote(url, safe=self.rootpath)
 
         base_path = urllib.parse.urlparse(self.rootpath)[2] # /jfs/username (may be an email address)
         up_path = self.rootpath.replace('www', 'up')
@@ -1029,9 +1029,6 @@ class JFS(object):
             jotta_path = base_path + jotta_path
         else:
             jotta_path = quote(url)
-
-        if isinstance(jotta_path, six.text_type):
-            jotta_path = jotta_path.encode('utf-8') # urls have to be bytestrings
 
         return jotta_path
 
@@ -1162,7 +1159,7 @@ class JFS(object):
             # In this case, we ensure that the content parameter is disregarded as per previous comment
             monitor = None
             log.debug('files: ' + str(files))
-            encoder = requests_toolbelt.MultipartEncoder(files)
+            encoder = requests_toolbelt.MultipartEncoder(fields=files)
             if upload_callback is not None:
                 encoder_len = encoder.len # compute value for callback closure
                 def callback(m):
@@ -1216,6 +1213,10 @@ class JFS(object):
         Host: up.jottacloud.com
         """
         url = path.replace('www.jottacloud.com', 'up.jottacloud.com')
+
+        if isinstance(fileobject, StringIO):
+            fileobject = six.BytesIO(fileobject.getvalue().encode('utf-8'))
+
         # Calculate file length
         fileobject.seek(0,2)
         contentlen = fileobject.tell()
@@ -1235,12 +1236,11 @@ class JFS(object):
             print('Could not seek to file offset %r, re-starting upload of %r from 0', resume_offset, url)
             fileobject.seek(0)
 
-
         # Calculate file md5 hash
         md5hash = calculate_md5(fileobject)
 
-        log.debug('posting content (len %s, hash %s) to url %r', contentlen, md5hash, url)
-        print('posting content (len %s, hash %s) to url %r', contentlen, md5hash, url)
+        log.debug('Uploading content (len %s, hash %s) to url %r', contentlen, md5hash, url)
+        print('Uploading content (len %s, hash %s) to url %r', contentlen, md5hash, url)
         try:
             mtime = os.path.getmtime(fileobject.name)
             timestamp = datetime.datetime.fromtimestamp(mtime).isoformat()
@@ -1255,9 +1255,6 @@ class JFS(object):
              'created': timestamp,
              'file': (os.path.basename(url), fileobject, 'application/octet-stream'),
         })
-
-        encoder._read = encoder.read
-        encoder.read = lambda size: encoder._read(1024*1024)
 
         headers = {'JMd5': md5hash,
                    'JCreated': timestamp,

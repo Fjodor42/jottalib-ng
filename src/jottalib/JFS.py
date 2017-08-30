@@ -1015,15 +1015,15 @@ class JFS(object):
         up_path = self.rootpath.replace('www', 'up')
 
         # Make sure we don't mangle the '@' if the username is an email adress
-        if url.startswith(self.rootpath):
+        if str(url).startswith(self.rootpath):
             jotta_path = url.replace(self.rootpath, '')
             jotta_path = quote(jotta_path)
             jotta_path = self.rootpath + jotta_path
-        elif url.startswith(up_path):
+        elif str(url).startswith(up_path):
             jotta_path = url.replace(up_path, '')
             jotta_path = quote(jotta_path)
             jotta_path = up_path + jotta_path
-        elif url.startswith(base_path):
+        elif str(url).startswith(base_path):
             jotta_path = url.replace(base_path, '')
             jotta_path = quote(jotta_path)
             jotta_path = base_path + jotta_path

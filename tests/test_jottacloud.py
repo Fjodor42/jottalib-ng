@@ -121,11 +121,11 @@ def test_replace_if_changed(tmpdir):
     _jottapath = u'//Jotta/Archive/Test/test_replace_if_changed.txt'
     assert jottacloud.new(str(_localfile), _jottapath, jfs)
     # lastly, edit data, and see if it is automatically reuploaded
-    newdata = 2*TESTFILEDATA
-    _localfile.write(newdata.encode('utf-8'))
+    newdata = 2*TESTFILEDATA.encode('utf-8')
+    _localfile.write(newdata)
     jottacloud.replace_if_changed(str(_localfile), _jottapath, jfs)
     cloudobj = jfs.getObject(_jottapath)
-    assert cloudobj.read() == newdata
+    assert cloudobj.read().encode('utf-8') == newdata
     _del = cloudobj.delete()
 
 @pytest.mark.skipif(WIN32==True, reason="No file system support for special files")

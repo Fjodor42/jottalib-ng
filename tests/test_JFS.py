@@ -25,7 +25,7 @@ __author__ = 'havard@gulldahl.no'
 import sys, os, logging, datetime, types
 import tempfile, posixpath, urllib
 import six
-from six.moves import cStringIO as StringIO
+from six import StringIO
 
 
 # import dependencies
@@ -141,7 +141,7 @@ class TestJFS:
         t = jfs.up(p, six.BytesIO(TESTFILEDATA))
         f = jfs.getObject(p)
         assert isinstance(f, JFS.JFSFile)
-        assert f.read() == TESTFILEDATA
+        assert f.read().encode('utf-8') == TESTFILEDATA
         f.delete()
 
     def test_up_and_readpartial(self):
@@ -178,7 +178,9 @@ class TestJFS:
 
         assert isinstance(jfs.getObject('//Jotta'), JFS.JFSDevice)
         assert isinstance(jfs.getObject('//Jotta/Archive'), JFS.JFSMountPoint)
-        assert isinstance(jfs.getObject('//Jotta/Archive/test'), JFS.JFSFolder)
+        new_dir = jfs.getObject('//Jotta/Archive').mkdir('Test')
+        assert isinstance(jfs.getObject('//Jotta/Archive/Test'), JFS.JFSFolder)
+        new_dir.delete()
         #TODO: test with a python-requests object
 
     def test_urlencoded_filename(self, tmpdir):
@@ -197,10 +199,10 @@ class TestJFS:
                  'My,funky,file.txt', # file name with commas
                 ]
         if sys.platform != "win32":
-            # some filenames are not allowed on fat32 
+            # some filenames are not allowed on fat32
             test = tests + ['My?funky?file.txt', # file name with question marks
                             'My:funky:file.txt', # file name with colon signs
-                            ] 
+                            ]
 
         for f in tests:
             p = posixpath.join('/Jotta/Archive', f)
@@ -475,7 +477,6 @@ class TestJFSFile:
         #TODO: test file operations: .stream(), .rename(), .read(), .read_partial, .delete etc
         #TODO: test revisions
 
-    @pytest.mark.xfail(reason="Pending fix on bug #100")
     def test_on_the_fly_unicode_contents(self):
         data = six.StringIO(u'123abcæøå')
         p = "//Jotta/Archive/testfile_on_the_fly_unicode_contents.txt"

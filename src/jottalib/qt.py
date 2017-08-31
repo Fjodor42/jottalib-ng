@@ -143,10 +143,10 @@ class JFSModel(QtGui.QStandardItemModel):
     def createData(self, mimeType, data):
       #if not mimeType.split('/')[0] in ('image', ):
       #    return
-      print "createData", mimeType
+      print("createData", mimeType)
       with tempfile.NamedTemporaryFile(delete=False) as f:
           f.write(data)
-          print f.name
+          print(f.name)
           self.tempfileCreated.emit(f.name)
 
     def supportedDropActions(self):
@@ -166,10 +166,10 @@ class jottaMimeData(QtCore.QMimeData):
     dataRequested = QtCore.pyqtSignal(unicode)
 
     def retrieveData(self, mimeType, _type):
-      print "retrieveData", mimeType, _type
+      print("retrieveData", mimeType, _type)
       self.dataRequested.emit(mimeType)
       return super(jottaMimeData, self).retrieveData(mimeType, _type)
 
     def setTempfile(self, fn):
-      print "setTempfile", fn
+      print("setTempfile", fn)
       self.setUrls([QtCore.QUrl(fn), ])

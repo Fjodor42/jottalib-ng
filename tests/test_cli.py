@@ -32,6 +32,7 @@ from six import StringIO
 import pytest # pip install pytest
 
 # import jotta
+
 from jottalib import JFS, __version__, cli
 
 WIN32 = (sys.platform == "win32")
@@ -68,18 +69,20 @@ def test_mkdir():
     with pytest.raises(SystemExit):
         cli.mkdir([]) # argparse should raise systemexit without the mandatory arguments
     assert cli.mkdir(['testmkdir'])
-    d = jfs.getObject('/Jotta/Sync/testmkdir')
+    d = jfs.getObject('//Jotta/Sync/testmkdir')
     assert isinstance(d, JFS.JFSFolder)
     assert d.is_deleted() == False
 
+@pytest.mark.skipif(WIN32==True,
+                        reason="TODO: Get it to work on WIN32")
 def test_upload(tmpdir):
     with pytest.raises(SystemExit):
         cli.upload([]) # argparse should raise systemexit without the mandatory arguments
 
     testfile = tmpdir.join('test_upload-%s.txt' % timestamp()).ensure()
     testfile.write(TESTFILEDATA)
-    assert cli.upload([str(testfile), '//Jotta/Archive'])
-    fi = jfs.getObject('/Jotta/Archive/%s' % str(testfile.basename))
+    assert cli.upload([str(testfile), '//Jotta/Archive/'])
+    fi = jfs.getObject('//Jotta/Archive/%s' % str(testfile.basename))
     assert isinstance(fi, JFS.JFSFile)
     assert fi.read() == TESTFILEDATA
     fi.delete()
@@ -102,7 +105,7 @@ def test_rm():
     with pytest.raises(SystemExit):
         cli.rm([]) # argparse should raise systemexit without the mandatory arguments
     assert cli.rm(['testmkdir'])
-    d = jfs.getObject('/Jotta/Sync/testmkdir')
+    d = jfs.getObject('//Jotta/Sync/testmkdir')
     assert isinstance(d, JFS.JFSFolder)
     assert d.is_deleted() == True
 
@@ -110,10 +113,10 @@ def test_cat():
     with pytest.raises(SystemExit):
         cli.cat([]) # argparse should raise systemexit without the mandatory arguments
     testcontents = u'12345test'
-    testpath = '/Jotta/Archive/Test/test.txt'
+    testpath = '//Jotta/Archive/Test/test.txt'
     d = jfs.up(testpath, StringIO(testcontents))
     assert isinstance(d, JFS.JFSFile)
-    assert cli.cat(['/%s' % testpath,]) == testcontents
+    assert cli.cat([testpath]) == testcontents
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
@@ -123,7 +126,7 @@ def test_restore():
     assert cli.mkdir(['testmkdir'])
     assert cli.rm(['testmkdir'])
     assert cli.restore(['testmkdir'])
-    d = jfs.getObject('/Jotta/Sync/testmkdir')
+    d = jfs.getObject('//Jotta/Sync/testmkdir')
     assert isinstance(d, JFS.JFSFolder)
     assert d.is_deleted() == False
 
@@ -146,20 +149,21 @@ def test_download(tmpdir):
     with pytest.raises(SystemExit):
         cli.download([]) # argparse should raise systemexit without the mandatory arguments
     testcontents = u'12345test'
-    testdir = '/Jotta/Archive/Test'
+    testdir = '//Jotta/Archive/Test'
+    cli.mkdir([testdir])
     testfile = 'test.txt'
     testpath = posixpath.join(testdir, testfile)
     d = jfs.up(testpath, StringIO(testcontents))
     with tmpdir.as_cwd():
-        assert cli.download(['/%s' % testpath,])
-        assert cli.download(['/%s' % testpath, '--checksum'])
+        assert cli.download(['%s' % testpath])
+        assert cli.download(['%s' % testpath, '--checksum'])
         #TODO: implement when --resume is - assert cli.download(['/%s' % testpath, '--resume'])
         assert tmpdir.join(testfile).read_text('utf-8') == testcontents
         # download the whole directlry
-        assert cli.download(['/%s' % testdir,])
-        assert cli.download(['/%s' % testdir, '--checksum'])
+        assert cli.download(['%s' % testdir])
+        assert cli.download(['%s' % testdir, '--checksum'])
         assert tmpdir.join('Test').join(testfile).read() == testcontents
-
+    cli.rm([testdir])
 # TODO:
 
 # def parse_args_and_apply_logging_level(parser):

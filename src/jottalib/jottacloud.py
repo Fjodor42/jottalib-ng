@@ -18,7 +18,7 @@
 #
 # Copyright 2014-2016 Håvard Gulldahl <havard@gulldahl.no>
 
-import sys, os, os.path, posixpath, logging, collections, stat
+import sys, os, os.path, posixpath, logging, collections, stat, six
 
 log = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ def _decode_filename_to_unicode(f):
     If the argument already is unicode, return as is'''
 
     log.debug('_decode_filename_to_unicode(%s)', repr(f))
-    if isinstance(f, unicode):
+    if isinstance(f, six.text_type):
         return f
     try:
         return f.decode(sys.getfilesystemencoding())
@@ -199,13 +199,13 @@ def new(localfile, jottapath, JFS):
     """Upload a new file from local disk (doesn't exist on JottaCloud).
 
     Returns JottaFile object"""
-    with open(localfile) as lf:
+    with open(localfile, 'rb') as lf:
         _new = JFS.up(jottapath, lf)
     return _new
 
 def resume(localfile, jottafile, JFS):
     """Continue uploading a new file from local file (already exists on JottaCloud"""
-    with open(localfile) as lf:
+    with open(localfile, 'rb') as lf:
         _complete = jottafile.resume(lf)
     return _complete
 
@@ -218,7 +218,7 @@ def replace_if_changed(localfile, jottapath, JFS):
     jf = JFS.getObject(jottapath)
     lf_hash = getxattrhash(localfile) # try to read previous hash, stored in xattr
     if lf_hash is None:               # no valid hash found in xattr,
-        with open(localfile) as lf:
+        with open(localfile, 'rb') as lf:
             lf_hash = calculate_md5(lf) # (re)calculate it
     if type(jf) == JFSIncompleteFile:
         log.debug("Local file %s is incompletely uploaded, continue", localfile)
@@ -268,9 +268,9 @@ def setxattrhash(filename, md5hash):
         return False
     try:
         x = xattr(filename)
-        x.set('user.jottalib.md5', md5hash)
-        x.set('user.jottalib.timestamp', str(os.path.getmtime(filename)))
-        x.set('user.jottalib.filesize', str(os.path.getsize(filename)))
+        x.set('user.jottalib.md5', md5hash.encode('utf-8'))
+        x.set('user.jottalib.timestamp', str(os.path.getmtime(filename)).encode('utf-8'))
+        x.set('user.jottalib.filesize', str(os.path.getsize(filename)).encode('utf-8'))
         return True
     except IOError:
         # no file system support
@@ -287,12 +287,15 @@ def getxattrhash(filename):
         return None
     try:
         x = xattr(filename)
-        if x.get('user.jottalib.filesize') != str(os.path.getsize(filename)) or x.get('user.jottalib.timestamp') != str(os.path.getmtime(filename)):
+        print(x.get('user.jottalib.filesize'))
+        print(x.get('user.jottalib.timestamp'))
+        print(x.get('user.jottalib.md5'))
+        if x.get('user.jottalib.filesize').decode('utf-8') != str(os.path.getsize(filename)) or x.get('user.jottalib.timestamp').decode('utf-8') != str(os.path.getmtime(filename)):
             x.remove('user.jottalib.filesize')
             x.remove('user.jottalib.timestamp')
             x.remove('user.jottalib.md5')
             return None # this is not the file we have calculated md5 for
-        return x.get('user.jottalib.md5')
+        return x.get('user.jottalib.md5').decode('utf-8')
     except Exception as e:
         log.debug('setxattr got exception %r', e)
         return None

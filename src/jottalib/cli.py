@@ -240,8 +240,8 @@ def ls(argv=None):
     if args.item:
         if args.item.startswith('//'):
             # break out of root_folder
-            mountpoint = posixpath.join(*posixpath.join(args.item.split("/")[3:4]))
-            path = posixpath.join(*posixpath.join(args.item.split("/")[4:]))
+            mountpoint = str.join(str('/'),args.item.split("/")[3:4])
+            path = str.join(str('/'), args.item.split("/")[4:])
 
             logging.debug('len: ' + str(len(args.item.split("/"))))
 
@@ -272,7 +272,7 @@ def ls(argv=None):
         logging.debug('item.files: ' + str(item.files()))
 
         files = []
-	for f in item.files():
+        for f in item.files():
             logging.debug('f: ' + str(f))
             if not f is None:
                 files.append([f.created, print_size(f.size, humanize=args.humanize) if f.size else u'',
@@ -410,7 +410,7 @@ def download(argv=None):
 
             _abs_folder_path = posixpath.join(JFS.JFS_ROOT, folder[1:])
             logging.debug("absolute folder path  : %r", _abs_folder_path)
-            _rel_folder_path = posixpath.join(*posixpath.join(folder.split("/")[4:]))
+            _rel_folder_path = str.join(str('/'), folder.split('/')[4:])
             logging.info('relative folder path: %r', _rel_folder_path)
 
             if len(_rel_folder_path) > 250: #Windows has a limit of 250 characters in path
@@ -566,8 +566,8 @@ def cat(argv=None):
     if args.file.startswith('//'):
         # break out of root_folder
 
-        mountpoint = posixpath.join(*posixpath.join(args.file.split("/")[3:4]))
-        path = posixpath.join(*posixpath.join(args.file.split("/")[4:]))
+        mountpoint = str.join(str('/'), args.file.split("/")[3:4])
+        path = str.join(str('/'), args.file.split("/")[4:])
         logging.debug('mountpoint = ' + mountpoint)
         logging.debug('path = ' + path)
 
@@ -583,8 +583,12 @@ def cat(argv=None):
         sys.exit(1)
     s = ''
     for chunk in item.stream():
-        print(chunk.encode(sys.getdefaultencoding()))
-        s = s + chunk
+        if isinstance(chunk, six.text_type):
+            print(chunk.encode(sys.getdefaultencoding()))
+            s = s + chunk
+        else:
+            print(chunk)
+            s = s + chunk.decode(sys.getdefaultencoding())
     return s
 
 def scanner(argv=None):

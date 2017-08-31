@@ -27,11 +27,14 @@ import sys, os, os.path, time
 import posixpath, logging, datetime, hashlib
 import tempfile
 from collections import namedtuple
+from six.moves.urllib.parse import quote
+import six.moves.urllib as urllib
+from six import StringIO as StringIO
 import six
+import io
 
 # importing external dependencies (pip these, please!)
 import requests
-from requests.utils import quote
 import netrc
 import requests_toolbelt
 import certifi
@@ -267,9 +270,7 @@ class JFSFolder(object):
                     yield JFSIncompleteFile(_f, self.jfs, self.path)
 
         except AttributeError:
-            #while False:
-            yield None
-            #return [x for x in []]
+            pass
 
     def folders(self):
         if not self.synced:
@@ -498,7 +499,7 @@ class JFSIncompleteFile(JFSCorruptFile):
     def resume(self, data):
         'Resume uploading an incomplete file, after a previous upload was interrupted. Returns new file object'
         if not hasattr(data, 'read'):
-            data = six.BytesIO(data)#StringIO(data)
+            data = six.BytesIO(data) #StringIO(data)
 
         #Check that we actually know from what byte to resume.
         #If self.size === -1, it means we never got the value from the server.
@@ -566,7 +567,12 @@ class JFSFile(JFSIncompleteFile):
     def read(self):
         'Get the file contents as string'
         #return self.jfs.raw('%s?mode=bin' % self.path)
-        return self.jfs.raw(url=self.path, params={'mode':'bin'})
+        result = self.jfs.raw(url=self.path, params={'mode':'bin'})
+
+        if not isinstance(result, six.text_type):
+            result = result.decode('utf-8')
+
+        return result
         """
             * name = 'jottacloud.sync.pdfname'
             * uuid = '37530f11-d55b-4f31-acf4-27854813cd34'
@@ -594,7 +600,7 @@ class JFSFile(JFSIncompleteFile):
     def write(self, data):
         'Put, possibly replace, file contents with (new) data'
         if not hasattr(data, 'read'):
-            data = six.BytesIO(data)#StringIO(data)
+            data = six.BytesIO(data) #StringIO(data)
         self.jfs.up(self.path, data)
 
     def share(self):
@@ -731,7 +737,7 @@ class JFSMountPoint(JFSFolder):
     @property
     def path(self):
         jottadev = self.jfs.get_jfs_device('Jotta')
-	log.debug('**********' + jottadev.path)
+        log.debug('**********' + jottadev.path)
         result = '%s/%s' % (jottadev.path, self.folder.name)
         log.debug('JFSMountPoint, path: %r', result)
         return result
@@ -751,7 +757,6 @@ class JFSMountPoint(JFSFolder):
 #        result = JFSMountPoint.path.fget(self)
 #        log.debug('result: ' + result)
 #        return result
-#
 #
 #    def folders(self):
 #        try:
@@ -1009,18 +1014,23 @@ class JFS(object):
         self.session.close()
 
     def escapeUrl(self, url):
+#        if not isinstance(url, six.text_type):
+#            url = url.decode('utf-8') # urls have to be bytestrings
         if isinstance(url, six.text_type):
             url = url.encode('utf-8') # urls have to be bytestrings
-        return quote(url, safe=self.rootpath)
+        return quote(url, safe='@/:')
 
     def request(self, url, extra_headers=None, params=None):
         'Make a GET request for url, with or without caching'
-        if not url.startswith('http'):
+        if isinstance(url, six.text_type):
+            url = url.encode('utf-8') # urls have to be bytestrings
+
+        if not url.startswith(b'http'):
             # relative url
-            if url.startswith('//'):
+            if url.startswith(b'//'):
                 url = url[1:]
-            url = self.rootpath + url
-            print url
+            url = self.rootpath.encode('utf-8') + url
+            print(url)
 
         log.debug("getting url: %r, extra_headers=%r, params=%r", url, extra_headers, params)
         if extra_headers is None: extra_headers={}
@@ -1127,20 +1137,20 @@ class JFS(object):
             if url.startswith('//'):
                 url = url[1:]
             url = self.rootpath + url
-            print url
+            print(url)
 
         log.debug('posting content (len %s) to url %s', len(content) if content is not None else '?', url)
-        print 'posting content (len %s) to url %s', len(content) if content is not None else '?', url
+        print('posting content (len %s) to url %s', len(content) if content is not None else '?', url)
         headers = self.session.headers.copy()
         headers.update(**extra_headers)
 
-	monitor = content # *Should* be None if files isn't
+        monitor = content # *Should* be None if files isn't
 
         if not files is None:
             # In this case, we ensure that the content parameter is disregarded as per previous comment
             monitor = None
             log.debug('files: ' + str(files))
-            encoder = requests_toolbelt.MultipartEncoder(files)
+            encoder = requests_toolbelt.MultipartEncoder(fields=files)
             if upload_callback is not None:
                 encoder_len = encoder.len # compute value for callback closure
                 def callback(m):
@@ -1155,9 +1165,11 @@ class JFS(object):
 
         # The monitor variable is now either a monitor, an encoder or the content string
 
-	if isinstance(monitor, requests_toolbelt.MultipartEncoderMonitor) or isinstance(monitor, requests_toolbelt.MultipartEncoder):
+        if isinstance(monitor, requests_toolbelt.MultipartEncoderMonitor) or isinstance(monitor, requests_toolbelt.MultipartEncoder):
             monitor._read = monitor.read
             monitor.read = lambda size: monitor._read(1024*1024)
+
+        print(monitor)
 
         r = self.session.post(url, data=monitor, params=params, headers=headers)
 
@@ -1194,6 +1206,15 @@ class JFS(object):
         Host: up.jottacloud.com
         """
         url = path.replace('www.jottacloud.com', 'up.jottacloud.com')
+
+        if isinstance(fileobject, StringIO):
+            fileobject = six.BytesIO(fileobject.getvalue().encode('utf-8'))
+        elif isinstance(fileobject, io.TextIOWrapper):
+            _fileobject = fileobject
+            bytesobject = six.BytesIO()
+            bytesobject.write(_fileobject.buffer.read())
+            fileobject = bytesobject
+
         # Calculate file length
         fileobject.seek(0,2)
         contentlen = fileobject.tell()
@@ -1210,15 +1231,14 @@ class JFS(object):
             log.warning('Could not seek to file offset %r, re-starting upload of %r from 0',
                          resume_offset,
                          url)
-            print 'Could not seek to file offset %r, re-starting upload of %r from 0', resume_offset, url
+            print('Could not seek to file offset %r, re-starting upload of %r from 0', resume_offset, url)
             fileobject.seek(0)
-
 
         # Calculate file md5 hash
         md5hash = calculate_md5(fileobject)
 
-        log.debug('posting content (len %s, hash %s) to url %r', contentlen, md5hash, url)
-        print 'posting content (len %s, hash %s) to url %r', contentlen, md5hash, url
+        log.debug('Uploading content (len %s, hash %s) to url %r', contentlen, md5hash, url)
+        print('Uploading content (len %s, hash %s) to url %r', contentlen, md5hash, url)
         try:
             mtime = os.path.getmtime(fileobject.name)
             timestamp = datetime.datetime.fromtimestamp(mtime).isoformat()
@@ -1233,9 +1253,6 @@ class JFS(object):
              'created': timestamp,
              'file': (os.path.basename(url), fileobject, 'application/octet-stream'),
         })
-
-        encoder._read = encoder.read
-        encoder.read = lambda size: encoder._read(1024*1024)
 
         headers = {'JMd5': md5hash,
                    'JCreated': timestamp,

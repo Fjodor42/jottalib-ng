@@ -23,10 +23,7 @@ __author__ = 'havard@gulldahl.no'
 
 # import standardlib
 import sys, os, logging, tempfile, random, hashlib, stat
-try:
-    from io import StringIO # py3
-except ImportError:
-    from cStringIO import StringIO  # py2
+from six import BytesIO
 
 # import py.test
 import pytest # pip install pytest
@@ -56,35 +53,36 @@ class TestXattr:
                         reason="requires xattr")
     def test_setget(self):
         temp = tempfile.NamedTemporaryFile()
-        temp.write(random.randint(0, 10)*TESTFILEDATA)
+        temp.write(random.randint(0, 10)*TESTFILEDATA.encode('utf-8'))
         temp.flush()
         temp.seek(0)
         md5 = hashlib.md5(temp.read()).hexdigest()
         assert jottacloud.setxattrhash(temp.name, md5) is not False
         assert jottacloud.getxattrhash(temp.name) == md5
         x = xattr(temp.name)
-        assert x.get('user.jottalib.md5') == md5
-        assert x.get('user.jottalib.filesize') == str(os.path.getsize(temp.name)) # xattr always stores strings
+        assert x.get('user.jottalib.md5').decode('utf-8') == md5
+        assert x.get('user.jottalib.filesize').decode('utf-8') == str(os.path.getsize(temp.name))
 
-
+@pytest.mark.skipif(WIN32==True,
+                        reason="TODO: Get it to work on WIN32")
 def test_get_jottapath(tmpdir):
     # def get_jottapath(localtopdir, dirpath, jottamountpoint):
     topdir = tmpdir.mkdir("topdir")
     subdir = topdir.mkdir("subdir1").mkdir("subdir2")
-    jottapath = jottacloud.get_jottapath(str(topdir), str(subdir), "/TEST_ROOT")
-    assert jottapath == "/TEST_ROOT/topdir/subdir1/subdir2"
+    jottapath = jottacloud.get_jottapath(str(topdir), str(subdir), "/Sync")
+    assert jottapath == "/Sync/topdir/subdir1/subdir2"
 
 
 def test_new():
     # def new(localfile, jottapath, JFS):
     _localfile = u'tests/requirements.txt'
-    _jottapath = u'/Jotta/Archive/TEST/test_new_ascii_filename.txt'
+    _jottapath = u'//Jotta/Archive/Test/test_new_ascii_filename.txt'
     _new = jottacloud.new(_localfile, _jottapath, jfs)
     assert isinstance(_new, JFS.JFSFile)
     _new.delete()
     _localfile2 = u'tests/requirements.txt'
-    _jottapath2 = u'/Jotta/Archive/TEST/test_new_blåbær_utf8_filename.txt'
-    _new2 = jottacloud.new(_localfile2, _jottapath2, jfs)
+    _jottapath2 = u'/Jotta/Archive/Test/test_new_blåbær_utf8_filename.txt'
+    _new2 = jottacloud.new(_localfile2, u'/' + _jottapath2, jfs)
     assert isinstance(_new2, JFS.JFSFile)
     assert _new2.path.endswith(_jottapath2)
     _new2.delete()
@@ -93,7 +91,7 @@ def test_new():
 def test_is_file():
     # def is_file(jottapath, JFS):
     _localfile = u'tests/requirements.txt'
-    _jottapath = u'/Jotta/Archive/TEST/test_is_file.txt'
+    _jottapath = u'//Jotta/Archive/Test/test_is_file.txt'
     _new = jottacloud.new(_localfile, _jottapath, jfs)
     assert jottacloud.is_file(_jottapath, jfs)
     _new.delete()
@@ -102,7 +100,7 @@ def test_is_file():
 def test_delete():
     # def delete(jottapath, JFS):
     _localfile = u'tests/requirements.txt'
-    _jottapath = u'/Jotta/Archive/TEST/test_delete.txt'
+    _jottapath = u'//Jotta/Archive/Test/test_delete.txt'
     _new = jottacloud.new(_localfile, _jottapath, jfs)
     _del = _new.delete()
     assert _del.is_deleted() == True
@@ -115,19 +113,20 @@ def test_replace_if_changed(tmpdir):
     rndm = random.randint(0, 1000)
     with pytest.raises(JFS.JFSNotFoundError):
         assert jottacloud.replace_if_changed(_localfile,
-                                             '/Jotta/Archive/test_replace_if_changed_nonexisting-%i.txt' % rndm,
+                                             '//Jotta/Archive/test_replace_if_changed_nonexisting-%i.txt' % rndm,
                                              jfs)
     # now, put some data there and uplaod
     _localfile = tmpdir.join('test_replace_if_changed-%s.txt' % rndm)
-    _localfile.write(1*TESTFILEDATA)
-    _jottapath = u'/Jotta/Archive/TEST/test_replace_if_changed.txt'
+    _localfile.write_binary(1*TESTFILEDATA.encode('utf-8')
+)
+    _jottapath = u'//Jotta/Archive/Test/test_replace_if_changed.txt'
     assert jottacloud.new(str(_localfile), _jottapath, jfs)
     # lastly, edit data, and see if it is automatically reuploaded
     newdata = 2*TESTFILEDATA
-    _localfile.write(newdata)
+    _localfile.write_binary(newdata.encode('utf-8'))
     jottacloud.replace_if_changed(str(_localfile), _jottapath, jfs)
     cloudobj = jfs.getObject(_jottapath)
-    assert cloudobj.read() == newdata
+    assert cloudobj.read().encode('utf-8') == _localfile.read_binary()
     _del = cloudobj.delete()
 
 @pytest.mark.skipif(WIN32==True, reason="No file system support for special files")
@@ -148,7 +147,7 @@ def test_special_files(tmpdir):
     tmpdir.join('control1').write('control1', ensure=True)
     tmpdir.join('control2.txt').write('control2.txt', ensure=True)
 
-    _jottapath = u'/Jotta/Archive/TEST_SPECIAL'
+    _jottapath = u'//Jotta/Archive/TEST_SPECIAL'
     #def compare(localtopdir, jottamountpoint, JFS, followlinks=False, exclude_patterns=None):
     # dirpath, # byte string, full path
     #    onlylocal, # set(), files that only exist locally, i.e. newly added files that don't exist online,

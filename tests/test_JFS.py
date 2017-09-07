@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
 'Tests for JFS.py'
 #
-# This file is part of jottalib.
+# This file is part of jottalib_ng.
 #
-# jottalib is free software: you can redistribute it and/or modify
+# jottalib_ng is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# jottalib is distributed in the hope that it will be useful,
+# jottalib_ng is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -37,7 +37,7 @@ import requests
 import pytest # pip install pytest
 
 # import jotta
-from jottalib import JFS, __version__
+from jottalib_ng import JFS, __version__
 
 jfs = JFS.JFS() # get username and password from environment or .netrc
 

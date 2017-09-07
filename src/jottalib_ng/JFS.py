@@ -20,7 +20,7 @@
 # metadata
 
 __author__ = 'havard@gulldahl.no'
-from jottalib import __version__
+from jottalib_ng import __version__
 
 # importing stdlib
 import sys, os, os.path, time
@@ -1004,7 +1004,7 @@ class JFS(object):
         self.username, password = auth
         self.session.auth = HTTPBasicAuth(self.username, password)
         self.session.verify = certifi.where()
-        self.session.headers =  {'User-Agent':'jottalib %s (https://github.com/havardgulldahl/jottalib)' % (__version__, ),
+        self.session.headers =  {'User-Agent':'jottalib_ng %s (https://github.com/Fjodor42/jottalib-ng)' % (__version__, ),
                                  'X-JottaAPIVersion': self.apiversion,
                                 }
         self.rootpath = JFS_ROOT + self.username

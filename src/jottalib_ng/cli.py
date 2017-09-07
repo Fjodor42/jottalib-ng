@@ -36,7 +36,7 @@ from functools import partial
 import codecs
 
 # import our stuff
-from jottalib import JFS, __version__
+from jottalib_ng import JFS, __version__
 from .scanner import filescanner
 
 # helper functions

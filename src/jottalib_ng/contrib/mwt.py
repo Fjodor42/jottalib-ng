@@ -79,7 +79,7 @@ class MWT(object):
 
 #
 #
-# This stuff added by the jottalib project, under the same terms as above (PSF License)
+# This stuff added by the jottalib_ng project, under the same terms as above (PSF License)
 #
 
 class Memoize(MWT):

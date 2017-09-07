@@ -37,8 +37,8 @@ logging.captureWarnings(True)
 log = logging.getLogger(__name__)
 
 # import jotta
-from jottalib import JFS, __version__
-from jottalib.contrib.mwt import Memoize
+from jottalib_ng import JFS, __version__
+from jottalib_ng.contrib.mwt import Memoize
 
 # import dependenceis (get them with pip!)
 try:

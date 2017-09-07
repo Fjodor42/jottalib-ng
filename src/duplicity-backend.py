@@ -45,13 +45,13 @@ def get_root_dir(jfs):
     return root_dir
 
 
-def set_jottalib_logging_level(log_level):
-    logger = logging.getLogger('jottalib')
+def set_jottalib_ng_logging_level(log_level):
+    logger = logging.getLogger('jottalib_ng')
     logger.setLevel(getattr(logging, log_level))
 
 
-def set_jottalib_log_handlers(handlers):
-    logger = logging.getLogger('jottalib')
+def set_jottalib_ng_log_handlers(handlers):
+    logger = logging.getLogger('jottalib_ng')
     for handler in handlers:
         logger.addHandler(handler)
 
@@ -75,17 +75,17 @@ class JottaCloudBackend(duplicity.backend.Backend):
 
         # Import JottaCloud libraries.
         try:
-            from jottalib import JFS
+            from jottalib_ng import JFS
         except ImportError:
-            raise BackendException('JottaCloud backend requires jottalib'
-                                   ' (see https://pypi.python.org/pypi/jottalib).')
+            raise BackendException('JottaCloud backend requires jottalib_ng'
+                                   ' (see https://pypi.python.org/pypi/jottalib_ng).')
 
-        # Set jottalib loggers to the same verbosity as duplicity
+        # Set jottalib_ng loggers to the same verbosity as duplicity
         duplicity_log_level = get_duplicity_log_level()
-        set_jottalib_logging_level(duplicity_log_level)
+        set_jottalib_ng_logging_level(duplicity_log_level)
 
-        # Ensure jottalib and duplicity log to the same handlers
-        set_jottalib_log_handlers(log._logger.handlers)
+        # Ensure jottalib_ng and duplicity log to the same handlers
+        set_jottalib_ng_log_handlers(log._logger.handlers)
 
         # Will fetch jottacloud auth from environment or .netrc
         self.client = JFS.JFS()
@@ -95,7 +95,7 @@ class JottaCloudBackend(duplicity.backend.Backend):
 
 
     def get_or_create_directory(self, directory_name):
-        from jottalib.JFS import JFSNotFoundError
+        from jottalib_ng.JFS import JFSNotFoundError
         root_directory = get_root_dir(self.client)
         full_path = posixpath.join(root_directory.path, directory_name)
         try:
@@ -144,7 +144,7 @@ class JottaCloudBackend(duplicity.backend.Backend):
         #  - Return a dict with a 'size' key, and a file size value (-1 for not found)
         #  - Retried if an exception is thrown
         log.Info('Querying size of %s' % filename)
-        from jottalib.JFS import JFSNotFoundError, JFSIncompleteFile
+        from jottalib_ng.JFS import JFSNotFoundError, JFSIncompleteFile
         remote_path = posixpath.join(self.folder.path, filename)
         try:
             remote_file = self.client.getObject(remote_path)

@@ -4,7 +4,7 @@
 import os
 import sys
 
-from jottalib.monitor import ArchiveEventHandler
+from jottalib_ng.monitor import ArchiveEventHandler
 
 def test_correct_url(tmpdir):
     tmpdir = str(tmpdir)

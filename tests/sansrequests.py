@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
-'Speed test jottalib without requests, only urllib3'
+'Speed test jottalib_ng without requests, only urllib3'
 #
-# This file is part of jottalib.
+# This file is part of jottalib_ng.
 #
-# jottalib is free software: you can redistribute it and/or modify
+# jottalib_ng is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# jottalib is distributed in the hope that it will be useful,
+# jottalib_ng is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -56,7 +56,7 @@ class JFS(object):
                                                                   ca_certs=certifi.where())
         self.username = username
         self.headers = urllib3.util.make_headers(basic_auth='%s:%s' % (username, password))
-        self.headers.update({'User-Agent':'jottalib %s (https://github.com/havardgulldahl/jottalib)' % (__version__, ),
+        self.headers.update({'User-Agent':'jottalib_ng %s (https://github.com/Fjodor42/jottalib-ng)' % (__version__, ),
                              'X-JottaAPIVersion': self.apiversion,
                             })
     def get(self, path):

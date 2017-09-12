@@ -32,8 +32,8 @@ log = logging.getLogger(__name__)
 #import pip modules
 from clint.textui import progress, puts, colored
 
-#import jottalib
-from jottalib.JFS import JFS
+#import jottalib_ng
+from jottalib_ng.JFS import JFS
 from . import jottacloud, __version__
 
 

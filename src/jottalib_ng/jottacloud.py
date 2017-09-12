@@ -30,8 +30,8 @@ try:
 except ImportError: # no xattr installed, not critical because it is optional
     HAS_XATTR=False
 
-import jottalib
-from jottalib.JFS import JFSNotFoundError, \
+import jottalib_ng
+from jottalib_ng.JFS import JFSNotFoundError, \
                          JFSFolder, JFSFile, JFSIncompleteFile, JFSFileDirList, \
                          calculate_md5
 
@@ -268,9 +268,9 @@ def setxattrhash(filename, md5hash):
         return False
     try:
         x = xattr(filename)
-        x.set('user.jottalib.md5', md5hash.encode('utf-8'))
-        x.set('user.jottalib.timestamp', str(os.path.getmtime(filename)).encode('utf-8'))
-        x.set('user.jottalib.filesize', str(os.path.getsize(filename)).encode('utf-8'))
+        x.set('user.jottalib_ng.md5', md5hash.encode('utf-8'))
+        x.set('user.jottalib_ng.timestamp', str(os.path.getmtime(filename)).encode('utf-8'))
+        x.set('user.jottalib_ng.filesize', str(os.path.getsize(filename)).encode('utf-8'))
         return True
     except IOError:
         # no file system support
@@ -287,15 +287,15 @@ def getxattrhash(filename):
         return None
     try:
         x = xattr(filename)
-        print(x.get('user.jottalib.filesize'))
-        print(x.get('user.jottalib.timestamp'))
-        print(x.get('user.jottalib.md5'))
-        if x.get('user.jottalib.filesize').decode('utf-8') != str(os.path.getsize(filename)) or x.get('user.jottalib.timestamp').decode('utf-8') != str(os.path.getmtime(filename)):
-            x.remove('user.jottalib.filesize')
-            x.remove('user.jottalib.timestamp')
-            x.remove('user.jottalib.md5')
+        print(x.get('user.jottalib_ng.filesize'))
+        print(x.get('user.jottalib_ng.timestamp'))
+        print(x.get('user.jottalib_ng.md5'))
+        if x.get('user.jottalib_ng.filesize').decode('utf-8') != str(os.path.getsize(filename)) or x.get('user.jottalib_ng.timestamp').decode('utf-8') != str(os.path.getmtime(filename)):
+            x.remove('user.jottalib_ng.filesize')
+            x.remove('user.jottalib_ng.timestamp')
+            x.remove('user.jottalib_ng.md5')
             return None # this is not the file we have calculated md5 for
-        return x.get('user.jottalib.md5').decode('utf-8')
+        return x.get('user.jottalib_ng.md5').decode('utf-8')
     except Exception as e:
         log.debug('setxattr got exception %r', e)
         return None

@@ -23,8 +23,8 @@ import logging, itertools, tempfile
 
 logging.getLogger(__name__)
 
-# Part of jottalib.
-import jottalib.JFS as JFS
+# Part of jottalib_ng.
+import jottalib_ng.JFS as JFS
 
 # This is only needed for Python v2 but is harmless for Python v3.
 import sip
@@ -89,7 +89,7 @@ class JFSModel(QtGui.QStandardItemModel):
 
     def __init__(self, jfs, rootPath, parent=None):
         super(JFSModel, self).__init__(parent)
-        self.jfs = jfs # a jottalib.JFS.JFS instance
+        self.jfs = jfs # a jottalib_ng.JFS.JFS instance
         self.rootItem = self.invisibleRootItem() # top item
         self.rootPath = rootPath
         rawObj = self.jfs.getObject(self.rootPath)

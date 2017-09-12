@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
-'Speed test jottalib'
+'Speed test jottalib_ng'
 #
-# This file is part of jottalib.
+# This file is part of jottalib_ng.
 #
-# jottalib is free software: you can redistribute it and/or modify
+# jottalib_ng is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# jottalib is distributed in the hope that it will be useful,
+# jottalib_ng is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -35,7 +35,7 @@ from clint.textui.progress import Bar as ProgressBar
 
 
 # import jotta
-from jottalib import JFS, __version__
+from jottalib_ng import JFS, __version__
 from sansrequests import JFS as LiteJFS
 
 def humanizeFileSize(size):
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     puts(colored.magenta("Network download speed %s/sec \n" % ( humanizeFileSize( (filesize / (_end-_start)) ) )))
 
     # TODO: PRINT STATS IN A TABLE FOR COMPARISON / BOOKKEEPING
-    # Versions: jottalib, urllib3, requests, jottaAPI
+    # Versions: jottalib_ng, urllib3, requests, jottaAPI
     # Server version from jottacloud.com
 
     # TEST WITHOUR REQUESTS, ONLY urllib3
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     _end = time.time()
     puts(colored.magenta("Network download speed %s/sec" % ( humanizeFileSize( (filesize / (_end-_start)) ) )))
 
-    # CLEANUP JOTTALIB
+    # CLEANUP JOTTALIB-NG
     fileobj.delete()
 
     #

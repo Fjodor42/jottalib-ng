@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 #
-# This file is part of jottalib.
+# This file is part of jottalib_ng.
 #
 # jottafs is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import re
 #sys.path.insert(0, './src')
 
 # get metadata (__version__, etc) from module magic
-with open(os.path.join('src', 'jottalib', '__init__.py')) as f:
+with open(os.path.join('src', 'jottalib_ng', '__init__.py')) as f:
     metadata = dict(re.findall("__([a-z]+)__\s*=\s*'([^']+)'", f.read()))
 
 try:
@@ -60,34 +60,34 @@ if sys.platform != 'win32':
     EXTRAS['FUSE'].append('fusepy')
     EXTRAS['Qt'].append('python-qt4')
 else:
-    print('WARNING: jottalib requires `lxml`, please get it from http://www.lfd.uci.edu/~gohlke/pythonlibs/')
+    print('WARNING: jottalib_ng requires `lxml`, please get it from http://www.lfd.uci.edu/~gohlke/pythonlibs/')
 
 
-setup(name='jottalib',
+setup(name='jottalib-ng',
       version=metadata['version'],
       license='GPLv3',
       description='A library and tools to access the JottaCloud API',
       long_description=long_desc,
       author=u'Håvard Gulldahl',
       author_email='havard@gulldahl.no',
-      url='https://github.com/havardgulldahl/jottalib',
+      url='https://github.com/Fjodor42/jottalib-ng',
       package_dir={'':'src'},
-      packages=['jottalib', 'jottalib.contrib'],
+      packages=['jottalib_ng', 'jottalib_ng.contrib'],
       install_requires=REQUIRES,
       extras_require=EXTRAS,
       entry_points={
           'console_scripts': [
-              'jotta-download = jottalib.cli:download',
-              'jotta-fuse = jottalib.cli:fuse',
-              'jotta-ls = jottalib.cli:ls',
-              'jotta-mkdir = jottalib.cli:mkdir',
-              'jotta-restore = jottalib.cli:restore',
-              'jotta-rm = jottalib.cli:rm',
-              'jotta-share = jottalib.cli:share',
-              'jotta-upload = jottalib.cli:upload',
-              'jotta-scanner = jottalib.cli:scanner',
-              'jotta-monitor = jottalib.cli:monitor',
-              'jotta-cat = jottalib.cli:cat',
+              'jotta-download = jottalib_ng.cli:download',
+              'jotta-fuse = jottalib_ng.cli:fuse',
+              'jotta-ls = jottalib_ng.cli:ls',
+              'jotta-mkdir = jottalib_ng.cli:mkdir',
+              'jotta-restore = jottalib_ng.cli:restore',
+              'jotta-rm = jottalib_ng.cli:rm',
+              'jotta-share = jottalib_ng.cli:share',
+              'jotta-upload = jottalib_ng.cli:upload',
+              'jotta-scanner = jottalib_ng.cli:scanner',
+              'jotta-monitor = jottalib_ng.cli:monitor',
+              'jotta-cat = jottalib_ng.cli:cat',
         ]
       },
       classifiers="""Intended Audience :: Developers

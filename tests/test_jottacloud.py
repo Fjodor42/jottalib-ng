@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
 'Tests for jottacloud.py'
 #
-# This file is part of jottalib.
+# This file is part of jottalib_ng.
 #
-# jottalib is free software: you can redistribute it and/or modify
+# jottalib_ng is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# jottalib is distributed in the hope that it will be useful,
+# jottalib_ng is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -38,7 +38,7 @@ WIN32 = (sys.platform == "win32")
 
 
 # import jotta
-from jottalib import JFS, __version__, jottacloud
+from jottalib_ng import JFS, __version__, jottacloud
 
 
 jfs = JFS.JFS() # get username and password from environment or .netrc
@@ -60,8 +60,8 @@ class TestXattr:
         assert jottacloud.setxattrhash(temp.name, md5) is not False
         assert jottacloud.getxattrhash(temp.name) == md5
         x = xattr(temp.name)
-        assert x.get('user.jottalib.md5').decode('utf-8') == md5
-        assert x.get('user.jottalib.filesize').decode('utf-8') == str(os.path.getsize(temp.name))
+        assert x.get('user.jottalib_ng.md5').decode('utf-8') == md5
+        assert x.get('user.jottalib_ng.filesize').decode('utf-8') == str(os.path.getsize(temp.name))
 
 @pytest.mark.skipif(WIN32==True,
                         reason="TODO: Get it to work on WIN32")
